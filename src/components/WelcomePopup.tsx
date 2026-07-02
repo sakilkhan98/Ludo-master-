@@ -37,18 +37,14 @@ export default function WelcomePopup() {
   const shareMessage = `🎮 *LUDO MASTER ONLINE (Pro V2)* 🎲\n\nHey! Check out this awesome, high-quality, real-time online multiplayer Ludo game designed by SakiL Khan (Rio). It has Ludo King style heavy sound effects, smart AI bots, rapid live chat, and a beautiful premium interface!\n\n👉 Join Telegram: https://t.me/Sharechat_ns_098\n👉 Play Now: ${window.location.origin}\n\nLet's roll the dice and have a match! 🏆🏆`;
 
   useEffect(() => {
-    // Show on mount (resets seen flag only when version changes, to keep it pristine)
-    const hasSeen = localStorage.getItem('hasSeenWelcome_v2_0_pro');
-    if (!hasSeen) {
-      const timer = setTimeout(() => {
-        setIsOpen(true);
-      }, 500);
-      return () => clearTimeout(timer);
-    }
+    // Show on mount every single time (disabled localStorage block as requested)
+    const timer = setTimeout(() => {
+      setIsOpen(true);
+    }, 500);
+    return () => clearTimeout(timer);
   }, []);
 
   const handleSkipAndContinue = () => {
-    localStorage.setItem('hasSeenWelcome_v2_0_pro', 'true');
     setIsOpen(false);
   };
 
