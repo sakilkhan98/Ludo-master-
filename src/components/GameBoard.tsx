@@ -122,6 +122,21 @@ export default function GameBoard() {
         ? activeRoom.turnPlayerId === 'p_red'
         : true; // In offline2 and offline4, anyone's turn is playable on this device
 
+  // Determine local player's color for perspective rotation
+  const getRotationAngle = (color: PlayerColor): number => {
+    switch (color) {
+      case 'red': return 180;
+      case 'green': return 90;
+      case 'yellow': return 0;
+      case 'blue': return 270;
+      default: return 0;
+    }
+  };
+
+  const localPlayer = (gameMode === 'online' && profile?.uid) ? activeRoom.players[profile.uid] : null;
+  const localColor: PlayerColor = localPlayer ? localPlayer.color : 'yellow'; // default yellow in offline so Red is top-left, Yellow is bottom-right (original view)
+  const boardRotation = getRotationAngle(localColor);
+
   // Turn Timer Countdown (30 seconds)
   useEffect(() => {
     if (activeRoom.status !== 'playing') return;
@@ -305,66 +320,10 @@ export default function GameBoard() {
         </div>
 
         {/* Board and Dice Wrapper with custom padding to hold outer dice and chat bubbles */}
-        <div className="relative p-10 md:p-12 w-full max-w-[440px] flex items-center justify-center">
-
-          {/* Floating Reaction Chat Bubbles at 4 corners OUTSIDE the board */}
-          <AnimatePresence>
-            {activeReactions.red && (
-              <motion.div
-                initial={{ scale: 0.5, opacity: 0, y: 15 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                exit={{ scale: 0.5, opacity: 0 }}
-                className="absolute top-[35px] left-[15px] z-50 pointer-events-none"
-              >
-                <div className="backdrop-blur-xl bg-slate-950/90 border-2 border-red-500 rounded-2xl rounded-tl-none p-2 shadow-2xl max-w-[150px] relative">
-                  <div className="absolute -top-1.5 left-2 w-3 h-3 bg-red-500 rotate-45" />
-                  <p className="text-[10px] font-black text-white leading-tight break-words">{activeReactions.red.text}</p>
-                </div>
-              </motion.div>
-            )}
-
-            {activeReactions.green && (
-              <motion.div
-                initial={{ scale: 0.5, opacity: 0, y: 15 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                exit={{ scale: 0.5, opacity: 0 }}
-                className="absolute top-[35px] right-[15px] z-50 pointer-events-none"
-              >
-                <div className="backdrop-blur-xl bg-slate-950/90 border-2 border-green-500 rounded-2xl rounded-tr-none p-2 shadow-2xl max-w-[150px] relative">
-                  <div className="absolute -top-1.5 right-2 w-3 h-3 bg-green-500 rotate-45" />
-                  <p className="text-[10px] font-black text-white leading-tight break-words">{activeReactions.green.text}</p>
-                </div>
-              </motion.div>
-            )}
-
-            {activeReactions.yellow && (
-              <motion.div
-                initial={{ scale: 0.5, opacity: 0, y: -15 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                exit={{ scale: 0.5, opacity: 0 }}
-                className="absolute bottom-[35px] right-[15px] z-50 pointer-events-none"
-              >
-                <div className="backdrop-blur-xl bg-slate-950/90 border-2 border-yellow-400 rounded-2xl rounded-br-none p-2 shadow-2xl max-w-[150px] relative">
-                  <div className="absolute -bottom-1.5 right-2 w-3 h-3 bg-yellow-400 rotate-45" />
-                  <p className="text-[10px] font-black text-white leading-tight break-words">{activeReactions.yellow.text}</p>
-                </div>
-              </motion.div>
-            )}
-
-            {activeReactions.blue && (
-              <motion.div
-                initial={{ scale: 0.5, opacity: 0, y: -15 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                exit={{ scale: 0.5, opacity: 0 }}
-                className="absolute bottom-[35px] left-[15px] z-50 pointer-events-none"
-              >
-                <div className="backdrop-blur-xl bg-slate-950/90 border-2 border-blue-500 rounded-2xl rounded-bl-none p-2 shadow-2xl max-w-[150px] relative">
-                  <div className="absolute -bottom-1.5 left-2 w-3 h-3 bg-blue-500 rotate-45" />
-                  <p className="text-[10px] font-black text-white leading-tight break-words">{activeReactions.blue.text}</p>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+        <div 
+          className="relative p-10 md:p-12 w-full max-w-[440px] flex items-center justify-center transition-transform duration-1000 ease-out-back"
+          style={{ transform: `rotate(${boardRotation}deg)` }}
+        >
 
           {/* Floating Active Corner Dice outside board corners */}
           {turnPlayer && (
@@ -382,6 +341,7 @@ export default function GameBoard() {
                     ? `scale-110 cursor-pointer hover:scale-115 active:scale-95 ring-4 animate-pulse ${DICE_RING_CLASSES[turnPlayer.color]}`
                     : `scale-90 opacity-95 ${DICE_RING_CLASSES[turnPlayer.color]}`
                 }`}
+                style={{ transform: `rotate(${-boardRotation}deg)` }}
               >
                 {/* Visual label above dice */}
                 <span className="px-2 py-0.5 mb-1.5 rounded-full bg-slate-950/80 text-[8px] font-black uppercase tracking-wider text-white">
@@ -416,6 +376,24 @@ export default function GameBoard() {
                     🎯
                   </div>
                 ))}
+
+                {/* Overlapping Yard Reaction Overlay (Un-rotated for perfect user reading) */}
+                <AnimatePresence>
+                  {activeReactions.red && (
+                    <motion.div
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.8, opacity: 0 }}
+                      className="absolute inset-0 bg-slate-950/95 rounded-lg flex flex-col items-center justify-center p-2.5 z-20 border-2 border-red-500 shadow-2xl"
+                      style={{ transform: `rotate(${-boardRotation}deg)` }}
+                    >
+                      <span className="text-[14px] leading-none mb-1">💬</span>
+                      <p className="text-[10px] font-extrabold text-red-400 text-center leading-tight break-words w-full">
+                        {activeReactions.red.text}
+                      </p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
 
@@ -427,6 +405,24 @@ export default function GameBoard() {
                     🎯
                   </div>
                 ))}
+
+                {/* Overlapping Yard Reaction Overlay */}
+                <AnimatePresence>
+                  {activeReactions.green && (
+                    <motion.div
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.8, opacity: 0 }}
+                      className="absolute inset-0 bg-slate-950/95 rounded-lg flex flex-col items-center justify-center p-2.5 z-20 border-2 border-green-500 shadow-2xl"
+                      style={{ transform: `rotate(${-boardRotation}deg)` }}
+                    >
+                      <span className="text-[14px] leading-none mb-1">💬</span>
+                      <p className="text-[10px] font-extrabold text-green-400 text-center leading-tight break-words w-full">
+                        {activeReactions.green.text}
+                      </p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
 
@@ -438,6 +434,24 @@ export default function GameBoard() {
                     🎯
                   </div>
                 ))}
+
+                {/* Overlapping Yard Reaction Overlay */}
+                <AnimatePresence>
+                  {activeReactions.yellow && (
+                    <motion.div
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.8, opacity: 0 }}
+                      className="absolute inset-0 bg-slate-950/95 rounded-lg flex flex-col items-center justify-center p-2.5 z-20 border-2 border-yellow-400 shadow-2xl"
+                      style={{ transform: `rotate(${-boardRotation}deg)` }}
+                    >
+                      <span className="text-[14px] leading-none mb-1">💬</span>
+                      <p className="text-[10px] font-extrabold text-yellow-400 text-center leading-tight break-words w-full">
+                        {activeReactions.yellow.text}
+                      </p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
 
@@ -449,6 +463,24 @@ export default function GameBoard() {
                     🎯
                   </div>
                 ))}
+
+                {/* Overlapping Yard Reaction Overlay */}
+                <AnimatePresence>
+                  {activeReactions.blue && (
+                    <motion.div
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.8, opacity: 0 }}
+                      className="absolute inset-0 bg-slate-950/95 rounded-lg flex flex-col items-center justify-center p-2.5 z-20 border-2 border-blue-500 shadow-2xl"
+                      style={{ transform: `rotate(${-boardRotation}deg)` }}
+                    >
+                      <span className="text-[14px] leading-none mb-1">💬</span>
+                      <p className="text-[10px] font-extrabold text-blue-400 text-center leading-tight break-words w-full">
+                        {activeReactions.blue.text}
+                      </p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
 
@@ -496,7 +528,7 @@ export default function GameBoard() {
                   >
                     {/* Render safe star icon */}
                     {safeStars.some(s => s.row === r && s.col === c) && (
-                      <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                      <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" style={{ transform: `rotate(${-boardRotation}deg)` }} />
                     )}
                   </div>
                 );
@@ -521,7 +553,7 @@ export default function GameBoard() {
                         moveToken(tokenIdx);
                       }
                     }}
-                    style={style}
+                    style={{ ...style, transform: `rotate(${-boardRotation}deg)` }}
                     className={`absolute rounded-full border-2 flex items-center justify-center shadow-lg transition-all duration-300 ${
                       colorMeta.bg
                     } ${colorMeta.border} ${
@@ -594,7 +626,7 @@ export default function GameBoard() {
             className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-slate-900 border border-slate-700/60 text-slate-200 font-bold text-xs shadow-xl hover:bg-slate-850 hover:border-slate-600 hover:scale-105 active:scale-95 transition-all"
           >
             <MessageCircle className="w-4 h-4 text-blue-400 animate-pulse" />
-            <span>কুইক চ্যাট / Reactions</span>
+            <span>Quick Chat / Reactions</span>
           </button>
         </div>
 
@@ -612,7 +644,7 @@ export default function GameBoard() {
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-sm font-black text-white/90 uppercase tracking-widest flex items-center gap-1.5">
                     <MessageCircle className="w-4 h-4 text-blue-400" />
-                    Quick Bengali Phrases
+                    Quick Game Reactions
                   </h3>
                   <button
                     onClick={() => setShowQuickChat(false)}
@@ -624,16 +656,16 @@ export default function GameBoard() {
                 
                 <div className="grid grid-cols-2 gap-2.5 max-h-[250px] overflow-y-auto pr-1">
                   {[
-                    { text: "জলদি চাল দিন! 🕒", label: "Quick Play" },
-                    { text: "আজ আমিই জিতবো! 😎", label: "Confidence" },
-                    { text: "ওরে বাবারে! 😮", label: "Surprise" },
-                    { text: "হা হা কেটে দিলাম! 😈", label: "Taunt" },
-                    { text: "ভাল খেলেছেন! 👏", label: "Respect" },
-                    { text: "ভাগ্যের খেলা ভাই! 🎲", label: "Luck" },
-                    { text: "একটু দাঁড়ান... 🤔", label: "Wait" },
-                    { text: "ধুর ছাই! 🤦‍♂️", label: "Oops" },
-                    { text: "৬ চাই ভাই! 🎲", label: "Need 6" },
-                    { text: "দারুণ চাল! 🔥", label: "Fire" }
+                    { text: "Play fast please! 🕒", label: "Hurry Up" },
+                    { text: "I will win this! 😎", label: "Confidence" },
+                    { text: "Wow, lucky roll! 😲", label: "Surprise" },
+                    { text: "Haha, captured you! 😈", label: "Taunt" },
+                    { text: "Well played! 👏", label: "Respect" },
+                    { text: "It's all about luck! 🎲", label: "Luck" },
+                    { text: "Wait, thinking... 🤔", label: "Strategy" },
+                    { text: "Oh no, bad luck! 🤦‍♂️", label: "Oops" },
+                    { text: "I need a 6! 🎲", label: "Need 6" },
+                    { text: "Excellent move! 🔥", label: "Awesome" }
                   ].map((phrase, idx) => (
                     <button
                       key={idx}
