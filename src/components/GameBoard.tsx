@@ -8,7 +8,7 @@ import {
 } from '../utils/ludoBoard';
 import { PlayerColor } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
-import { Star, Shield, HelpCircle, Trophy, Volume2, VolumeX, PhoneOff, ArrowRight, MessageCircle } from 'lucide-react';
+import { Star, Shield, HelpCircle, Trophy, Volume2, VolumeX, PhoneOff, ArrowRight, MessageCircle, Globe } from 'lucide-react';
 
 const DICE_CORNER_CLASSES: Record<PlayerColor, string> = {
   red: 'top-1 left-1 md:top-2 md:left-2',
@@ -321,7 +321,7 @@ export default function GameBoard() {
 
         {/* Board and Dice Wrapper with custom padding to hold outer dice and chat bubbles */}
         <div 
-          className="relative p-10 md:p-12 w-full max-w-[440px] flex items-center justify-center transition-transform duration-1000 ease-out-back"
+          className="relative p-10 md:p-12 w-full max-w-[540px] flex items-center justify-center transition-transform duration-1000 ease-out-back"
           style={{ transform: `rotate(${boardRotation}deg)` }}
         >
 
@@ -362,33 +362,44 @@ export default function GameBoard() {
             </div>
           )}
 
-          {/* Outer square container to lock aspect ratio of the board */}
-          <div className="w-full aspect-square bg-black/40 border-4 border-white/10 rounded-3xl p-1 shadow-2xl relative overflow-hidden backdrop-blur-xl">
+          {/* Outer square container representing premium wooden frame */}
+          <div className="w-full aspect-square bg-gradient-to-br from-[#df9e62] via-[#ca8545] to-[#aa6622] border-[12px] border-[#925524] rounded-[38px] p-2.5 shadow-[inset_0_4px_12px_rgba(255,255,255,0.45),0_15px_30px_rgba(0,0,0,0.7)] relative overflow-hidden">
             
-            {/* LUDO BOARD RENDERING USING ABSOLUTE SEGMENTS */}
-            <div className="w-full h-full relative bg-slate-950 rounded-2xl overflow-hidden">
+            {/* LUDO BOARD PLAYING FIELD WITH ELEVATED PARCHMENT BACKGROUND */}
+            <div className="w-full h-full relative bg-[#F7F4EB] rounded-[22px] overflow-hidden shadow-[inset_0_2px_8px_rgba(0,0,0,0.3)] border border-[#aa6622]/30">
             
             {/* 1. Red Yard (Top Left) */}
-            <div className="absolute top-0 left-0 w-[40%] h-[40%] bg-red-600 p-2 flex items-center justify-center">
-              <div className="w-full h-full bg-slate-950/85 rounded-xl border-2 border-red-500 flex flex-wrap p-2.5 items-center justify-center gap-2.5 relative">
-                {[0, 1, 2, 3].map((idx) => (
-                  <div key={idx} className="w-8 h-8 rounded-full bg-red-600/20 border border-red-500 flex items-center justify-center text-[10px] text-red-400">
-                    🎯
-                  </div>
-                ))}
+            <div className="absolute top-0 left-0 w-[40%] h-[40%] bg-[#E13A23] p-2 flex items-center justify-center border-r-[3px] border-b-[3px] border-[#8a4a15]/30">
+              <div className="w-[88%] h-[88%] bg-white rounded-2xl border-2 border-black/10 shadow-[inset_0_2px_6px_rgba(0,0,0,0.15)] relative flex items-center justify-center overflow-hidden">
+                {/* 6x6 grid mapping to perfectly match 15x15 layout */}
+                <div className="absolute inset-0 grid grid-cols-6 grid-rows-6 p-1.5 md:p-2.5">
+                  {Array.from({ length: 36 }).map((_, idx) => {
+                    const r = Math.floor(idx / 6);
+                    const c = idx % 6;
+                    const isSocket = (r === 2 || r === 3) && (c === 2 || c === 3);
+                    if (isSocket) {
+                      return (
+                        <div key={idx} className="flex items-center justify-center p-0.5">
+                          <div className="w-full h-full rounded-full bg-[#E13A23] border-[1.5px] border-white shadow-[0_2px_4px_rgba(0,0,0,0.15),inset_0_1.5px_3.5px_rgba(0,0,0,0.35)]" />
+                        </div>
+                      );
+                    }
+                    return <div key={idx} />;
+                  })}
+                </div>
 
-                {/* Overlapping Yard Reaction Overlay (Un-rotated for perfect user reading) */}
+                {/* Overlapping Yard Reaction Overlay */}
                 <AnimatePresence>
                   {activeReactions.red && (
                     <motion.div
                       initial={{ scale: 0.8, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       exit={{ scale: 0.8, opacity: 0 }}
-                      className="absolute inset-0 bg-slate-950/95 rounded-lg flex flex-col items-center justify-center p-2.5 z-20 border-2 border-red-500 shadow-2xl"
+                      className="absolute inset-0 bg-slate-950/95 rounded-full flex flex-col items-center justify-center p-2.5 z-20 border-2 border-red-500 shadow-2xl"
                       style={{ transform: `rotate(${-boardRotation}deg)` }}
                     >
                       <span className="text-[14px] leading-none mb-1">💬</span>
-                      <p className="text-[10px] font-extrabold text-red-400 text-center leading-tight break-words w-full">
+                      <p className="text-[10px] font-extrabold text-red-400 text-center leading-tight break-words w-[85%]">
                         {activeReactions.red.text}
                       </p>
                     </motion.div>
@@ -398,13 +409,24 @@ export default function GameBoard() {
             </div>
 
             {/* 2. Green Yard (Top Right) */}
-            <div className="absolute top-0 right-0 w-[40%] h-[40%] bg-green-600 p-2 flex items-center justify-center">
-              <div className="w-full h-full bg-slate-950/85 rounded-xl border-2 border-green-500 flex flex-wrap p-2.5 items-center justify-center gap-2.5 relative">
-                {[0, 1, 2, 3].map((idx) => (
-                  <div key={idx} className="w-8 h-8 rounded-full bg-green-600/20 border border-green-500 flex items-center justify-center text-[10px] text-green-400">
-                    🎯
-                  </div>
-                ))}
+            <div className="absolute top-0 right-0 w-[40%] h-[40%] bg-[#0BB24E] p-2 flex items-center justify-center border-l-[3px] border-b-[3px] border-[#8a4a15]/30">
+              <div className="w-[88%] h-[88%] bg-white rounded-2xl border-2 border-black/10 shadow-[inset_0_2px_6px_rgba(0,0,0,0.15)] relative flex items-center justify-center overflow-hidden">
+                {/* 6x6 grid mapping to perfectly match 15x15 layout */}
+                <div className="absolute inset-0 grid grid-cols-6 grid-rows-6 p-1.5 md:p-2.5">
+                  {Array.from({ length: 36 }).map((_, idx) => {
+                    const r = Math.floor(idx / 6);
+                    const c = idx % 6;
+                    const isSocket = (r === 2 || r === 3) && (c === 2 || c === 3);
+                    if (isSocket) {
+                      return (
+                        <div key={idx} className="flex items-center justify-center p-0.5">
+                          <div className="w-full h-full rounded-full bg-[#0BB24E] border-[1.5px] border-white shadow-[0_2px_4px_rgba(0,0,0,0.15),inset_0_1.5px_3.5px_rgba(0,0,0,0.35)]" />
+                        </div>
+                      );
+                    }
+                    return <div key={idx} />;
+                  })}
+                </div>
 
                 {/* Overlapping Yard Reaction Overlay */}
                 <AnimatePresence>
@@ -413,11 +435,11 @@ export default function GameBoard() {
                       initial={{ scale: 0.8, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       exit={{ scale: 0.8, opacity: 0 }}
-                      className="absolute inset-0 bg-slate-950/95 rounded-lg flex flex-col items-center justify-center p-2.5 z-20 border-2 border-green-500 shadow-2xl"
+                      className="absolute inset-0 bg-slate-950/95 rounded-full flex flex-col items-center justify-center p-2.5 z-20 border-2 border-green-500 shadow-2xl"
                       style={{ transform: `rotate(${-boardRotation}deg)` }}
                     >
                       <span className="text-[14px] leading-none mb-1">💬</span>
-                      <p className="text-[10px] font-extrabold text-green-400 text-center leading-tight break-words w-full">
+                      <p className="text-[10px] font-extrabold text-green-400 text-center leading-tight break-words w-[85%]">
                         {activeReactions.green.text}
                       </p>
                     </motion.div>
@@ -427,13 +449,24 @@ export default function GameBoard() {
             </div>
 
             {/* 3. Yellow Yard (Bottom Right) */}
-            <div className="absolute bottom-0 right-0 w-[40%] h-[40%] bg-yellow-500 p-2 flex items-center justify-center">
-              <div className="w-full h-full bg-slate-950/85 rounded-xl border-2 border-yellow-400 flex flex-wrap p-2.5 items-center justify-center gap-2.5 relative">
-                {[0, 1, 2, 3].map((idx) => (
-                  <div key={idx} className="w-8 h-8 rounded-full bg-yellow-500/20 border border-yellow-400 flex items-center justify-center text-[10px] text-yellow-500">
-                    🎯
-                  </div>
-                ))}
+            <div className="absolute bottom-0 right-0 w-[40%] h-[40%] bg-[#F9C013] p-2 flex items-center justify-center border-l-[3px] border-t-[3px] border-[#8a4a15]/30">
+              <div className="w-[88%] h-[88%] bg-white rounded-2xl border-2 border-black/10 shadow-[inset_0_2px_6px_rgba(0,0,0,0.15)] relative flex items-center justify-center overflow-hidden">
+                {/* 6x6 grid mapping to perfectly match 15x15 layout */}
+                <div className="absolute inset-0 grid grid-cols-6 grid-rows-6 p-1.5 md:p-2.5">
+                  {Array.from({ length: 36 }).map((_, idx) => {
+                    const r = Math.floor(idx / 6);
+                    const c = idx % 6;
+                    const isSocket = (r === 2 || r === 3) && (c === 2 || c === 3);
+                    if (isSocket) {
+                      return (
+                        <div key={idx} className="flex items-center justify-center p-0.5">
+                          <div className="w-full h-full rounded-full bg-[#F9C013] border-[1.5px] border-white shadow-[0_2px_4px_rgba(0,0,0,0.15),inset_0_1.5px_3.5px_rgba(0,0,0,0.35)]" />
+                        </div>
+                      );
+                    }
+                    return <div key={idx} />;
+                  })}
+                </div>
 
                 {/* Overlapping Yard Reaction Overlay */}
                 <AnimatePresence>
@@ -442,11 +475,11 @@ export default function GameBoard() {
                       initial={{ scale: 0.8, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       exit={{ scale: 0.8, opacity: 0 }}
-                      className="absolute inset-0 bg-slate-950/95 rounded-lg flex flex-col items-center justify-center p-2.5 z-20 border-2 border-yellow-400 shadow-2xl"
+                      className="absolute inset-0 bg-slate-950/95 rounded-full flex flex-col items-center justify-center p-2.5 z-20 border-2 border-yellow-400 shadow-2xl"
                       style={{ transform: `rotate(${-boardRotation}deg)` }}
                     >
                       <span className="text-[14px] leading-none mb-1">💬</span>
-                      <p className="text-[10px] font-extrabold text-yellow-400 text-center leading-tight break-words w-full">
+                      <p className="text-[10px] font-extrabold text-yellow-400 text-center leading-tight break-words w-[85%]">
                         {activeReactions.yellow.text}
                       </p>
                     </motion.div>
@@ -456,13 +489,24 @@ export default function GameBoard() {
             </div>
 
             {/* 4. Bottom Left Yard (Blue) */}
-            <div className="absolute bottom-0 left-0 w-[40%] h-[40%] bg-blue-600 p-2 flex items-center justify-center">
-              <div className="w-full h-full bg-slate-950/85 rounded-xl border-2 border-blue-500 flex flex-wrap p-2.5 items-center justify-center gap-2.5 relative">
-                {[0, 1, 2, 3].map((idx) => (
-                  <div key={idx} className="w-8 h-8 rounded-full bg-blue-600/20 border border-blue-500 flex items-center justify-center text-[10px] text-blue-400">
-                    🎯
-                  </div>
-                ))}
+            <div className="absolute bottom-0 left-0 w-[40%] h-[40%] bg-[#028BF8] p-2 flex items-center justify-center border-r-[3px] border-t-[3px] border-[#8a4a15]/30">
+              <div className="w-[88%] h-[88%] bg-white rounded-2xl border-2 border-black/10 shadow-[inset_0_2px_6px_rgba(0,0,0,0.15)] relative flex items-center justify-center overflow-hidden">
+                {/* 6x6 grid mapping to perfectly match 15x15 layout */}
+                <div className="absolute inset-0 grid grid-cols-6 grid-rows-6 p-1.5 md:p-2.5">
+                  {Array.from({ length: 36 }).map((_, idx) => {
+                    const r = Math.floor(idx / 6);
+                    const c = idx % 6;
+                    const isSocket = (r === 2 || r === 3) && (c === 2 || c === 3);
+                    if (isSocket) {
+                      return (
+                        <div key={idx} className="flex items-center justify-center p-0.5">
+                          <div className="w-full h-full rounded-full bg-[#028BF8] border-[1.5px] border-white shadow-[0_2px_4px_rgba(0,0,0,0.15),inset_0_1.5px_3.5px_rgba(0,0,0,0.35)]" />
+                        </div>
+                      );
+                    }
+                    return <div key={idx} />;
+                  })}
+                </div>
 
                 {/* Overlapping Yard Reaction Overlay */}
                 <AnimatePresence>
@@ -471,11 +515,11 @@ export default function GameBoard() {
                       initial={{ scale: 0.8, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       exit={{ scale: 0.8, opacity: 0 }}
-                      className="absolute inset-0 bg-slate-950/95 rounded-lg flex flex-col items-center justify-center p-2.5 z-20 border-2 border-blue-500 shadow-2xl"
+                      className="absolute inset-0 bg-slate-950/95 rounded-full flex flex-col items-center justify-center p-2.5 z-20 border-2 border-blue-500 shadow-2xl"
                       style={{ transform: `rotate(${-boardRotation}deg)` }}
                     >
                       <span className="text-[14px] leading-none mb-1">💬</span>
-                      <p className="text-[10px] font-extrabold text-blue-400 text-center leading-tight break-words w-full">
+                      <p className="text-[10px] font-extrabold text-blue-400 text-center leading-tight break-words w-[85%]">
                         {activeReactions.blue.text}
                       </p>
                     </motion.div>
@@ -484,13 +528,17 @@ export default function GameBoard() {
               </div>
             </div>
 
-            {/* 5. Center Finish (3x3 grid) */}
-            <div className="absolute top-[40%] left-[40%] w-[20%] h-[20%] bg-slate-950 flex items-center justify-center border border-slate-800 shadow-md">
-              <div className="w-full h-full grid grid-cols-2 grid-rows-2">
-                <div className="bg-red-600 flex items-center justify-center text-xs text-white">🏠</div>
-                <div className="bg-green-600 flex items-center justify-center text-xs text-white">🏠</div>
-                <div className="bg-blue-600 flex items-center justify-center text-xs text-white">🏠</div>
-                <div className="bg-yellow-500 flex items-center justify-center text-xs text-white">🏠</div>
+            {/* 5. Center Finish Area (Classic Triangles Layout) */}
+            <div className="absolute top-[40%] left-[40%] w-[20%] h-[20%] bg-[#E5A65D] flex items-center justify-center border-[2.5px] border-[#925524] overflow-hidden shadow-[inset_0_2px_5px_rgba(0,0,0,0.4)]">
+              <div className="w-full h-full relative">
+                {/* Left Triangle (Red) */}
+                <div className="absolute inset-0 bg-[#E13A23]" style={{ clipPath: 'polygon(0% 0%, 50% 50%, 0% 100%)' }} />
+                {/* Top Triangle (Green) */}
+                <div className="absolute inset-0 bg-[#0BB24E]" style={{ clipPath: 'polygon(0% 0%, 100% 0%, 50% 50%)' }} />
+                {/* Right Triangle (Yellow) */}
+                <div className="absolute inset-0 bg-[#F9C013]" style={{ clipPath: 'polygon(100% 0%, 100% 100%, 50% 50%)' }} />
+                {/* Bottom Triangle (Blue) */}
+                <div className="absolute inset-0 bg-[#028BF8]" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 50% 50%)' }} />
               </div>
             </div>
 
@@ -506,36 +554,50 @@ export default function GameBoard() {
 
                 if (isYard || isCenter) return <div key={idx} />;
 
-                // Find color mapping
-                let cellBg = 'bg-slate-950 border border-slate-900';
+                // Parchment white is default cell background
+                let cellBg = 'bg-[#FBF8EB] border-[0.5px] border-[#D6CEBC]/80 shadow-[inset_0_1px_1.5px_rgba(255,255,255,0.7)]';
+                let cellContent: React.ReactNode = null;
                 
                 // Color Home Paths
-                if (r === 7 && c >= 1 && c <= 5) cellBg = 'bg-red-600 border border-red-500';
-                if (c === 7 && r >= 1 && r <= 5) cellBg = 'bg-green-600 border border-green-500';
-                if (r === 7 && c >= 9 && c <= 13) cellBg = 'bg-yellow-500 border border-yellow-400';
-                if (c === 7 && r >= 9 && r <= 13) cellBg = 'bg-blue-600 border border-blue-500';
+                if (r === 7 && c >= 1 && c <= 5) cellBg = 'bg-[#E13A23] border-[0.5px] border-[#9E1A0C]/50 shadow-inner';
+                if (c === 7 && r >= 1 && r <= 5) cellBg = 'bg-[#0BB24E] border-[0.5px] border-[#067F37]/50 shadow-inner';
+                if (r === 7 && c >= 9 && c <= 13) cellBg = 'bg-[#F9C013] border-[0.5px] border-[#C99805]/50 shadow-inner';
+                if (c === 7 && r >= 9 && r <= 13) cellBg = 'bg-[#028BF8] border-[0.5px] border-[#0164B5]/50 shadow-inner';
 
                 // Color Start Cells
-                if (r === 6 && c === 1) cellBg = 'bg-red-600 border-2 border-red-400';
-                if (r === 1 && c === 8) cellBg = 'bg-green-600 border-2 border-green-400';
-                if (r === 8 && c === 13) cellBg = 'bg-yellow-500 border-2 border-yellow-400';
-                if (r === 13 && c === 6) cellBg = 'bg-blue-600 border-2 border-blue-400';
+                if (r === 6 && c === 1) {
+                  cellBg = 'bg-[#E13A23] border-[0.5px] border-[#9E1A0C]/40 relative shadow-inner';
+                }
+                if (r === 1 && c === 8) {
+                  cellBg = 'bg-[#0BB24E] border-[0.5px] border-[#067F37]/40 relative shadow-inner';
+                }
+                if (r === 8 && c === 13) {
+                  cellBg = 'bg-[#F9C013] border-[0.5px] border-[#C99805]/40 relative shadow-inner';
+                }
+                if (r === 13 && c === 6) {
+                  cellBg = 'bg-[#028BF8] border-[0.5px] border-[#0164B5]/40 relative shadow-inner';
+                }
+
+                // Path Entrance Cells (but without arrows as inside grid should be completely clean)
+
+                // Render Star cells but without any Star icon inside, keeping it clean
+                const isStar = safeStars.some(s => s.row === r && s.col === c);
+                if (isStar) {
+                  cellBg = 'bg-[#E5F1FF] border-[0.5px] border-[#B8D7FF] shadow-[inset_0_1px_2px_rgba(255,255,255,0.7)]';
+                }
 
                 return (
                   <div 
                     key={idx} 
                     className={`${cellBg} w-full h-full flex items-center justify-center text-[8px]`}
                   >
-                    {/* Render safe star icon */}
-                    {safeStars.some(s => s.row === r && s.col === c) && (
-                      <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" style={{ transform: `rotate(${-boardRotation}deg)` }} />
-                    )}
+                    {/* Clean and completely empty cell track as requested */}
                   </div>
                 );
               })}
             </div>
 
-            {/* 7. Active Tokens Layer */}
+            {/* 7. Active Tokens Layer (Redesigned as Premium 3D Glossy Pawns matching second photo) */}
             {(Object.entries(activeRoom.boardState) as [PlayerColor, number[]][]).flatMap(([color, tokens]) => {
               const colorMeta = COLOR_CLASSES[color as PlayerColor];
               const isPlayerColor = color === turnPlayer?.color;
@@ -554,17 +616,51 @@ export default function GameBoard() {
                       }
                     }}
                     style={{ ...style, transform: `rotate(${-boardRotation}deg)` }}
-                    className={`absolute rounded-full border-2 flex items-center justify-center shadow-lg transition-all duration-300 ${
-                      colorMeta.bg
-                    } ${colorMeta.border} ${
+                    className={`absolute flex items-center justify-center transition-all duration-300 ${
                       isHighlight 
-                        ? 'ring-4 ring-white animate-bounce shadow-yellow-400 z-30 cursor-pointer scale-110' 
+                        ? 'z-30 cursor-pointer scale-115 filter drop-shadow-[0_0_8px_rgba(250,204,21,0.85)]' 
                         : 'z-10'
                     }`}
                   >
-                    {/* Inner graphic representing active token detail */}
-                    <div className="w-2/3 h-2/3 rounded-full bg-white/30 border border-white/60 flex items-center justify-center shadow-inner text-[9px] font-bold text-slate-900">
-                      {stepCount === 57 ? '👑' : tokenIdx + 1}
+                    {/* Exquisite 3D Pawn Layout (Head on top, Collar in middle, Skirt base at bottom) */}
+                    <div className={`relative w-full h-[155%] -top-[55%] flex flex-col items-center justify-end select-none ${isHighlight ? 'animate-bounce' : ''}`}>
+                      
+                      {/* Smooth Pawn shadow on cell */}
+                      <div className="absolute bottom-0 w-[84%] h-[15%] bg-black/55 rounded-full blur-[1px] z-0" />
+                      
+                      {/* 1. Glossy Spherical Head (on top) */}
+                      <div className={`w-[68%] aspect-square rounded-full border border-black/15 z-20 shadow-md relative overflow-hidden ${
+                        color === 'red' ? 'bg-[radial-gradient(circle_at_35%_35%,#ffa5a5_0%,#e11d48_45%,#881337_100%)]' :
+                        color === 'green' ? 'bg-[radial-gradient(circle_at_35%_35%,#a7f3d0_0%,#10b981_45%,#064e3b_100%)]' :
+                        color === 'yellow' ? 'bg-[radial-gradient(circle_at_35%_35%,#fffbeb_0%,#eab308_45%,#713f12_100%)]' :
+                        'bg-[radial-gradient(circle_at_35%_35%,#dbeafe_0%,#3b82f6_45%,#1e3a8a_100%)]'
+                      }`}>
+                        {/* Specular spot */}
+                        <div className="absolute top-1 left-1.5 w-2 h-2 bg-white/85 rounded-full blur-[0.4px]" />
+                      </div>
+
+                      {/* 2. Middle neck collar separator ring */}
+                      <div className={`w-[48%] h-[10%] -mt-1 z-10 rounded-full border border-black/15 shadow-[inset_0_1.5px_2px_rgba(255,255,255,0.5)] ${
+                        color === 'red' ? 'bg-[#ff6b6b]' :
+                        color === 'green' ? 'bg-[#51cf66]' :
+                        color === 'yellow' ? 'bg-[#ffd43b]' :
+                        'bg-[#339af0]'
+                      }`} />
+
+                      {/* 3. Pawn Skirt Base (Styled as real 3D Conical shape matching the photo, at the bottom) */}
+                      <div 
+                        className={`w-[85%] h-[58%] -mt-1 border border-black/15 rounded-b-[4px] relative overflow-hidden shadow-inner z-0 ${
+                          color === 'red' ? 'bg-[linear-gradient(135deg,#ff3b30_0%,#d11a0f_50%,#800500_100%)]' :
+                          color === 'green' ? 'bg-[linear-gradient(135deg,#34c759_0%,#198d36_50%,#095019_100%)]' :
+                          color === 'yellow' ? 'bg-[linear-gradient(135deg,#ffcc00_0%,#dca400_50%,#885f00_100%)]' :
+                          'bg-[linear-gradient(135deg,#007aff_0%,#0055c5_50%,#002b7a_100%)]'
+                        }`}
+                        style={{ clipPath: 'polygon(18% 0%, 82% 0%, 100% 100%, 0% 100%)' }}
+                      >
+                        {/* Real shiny specular gloss vertical highlight */}
+                        <div className="absolute top-0 left-[22%] w-[18%] h-full bg-gradient-to-r from-white/40 to-transparent transform -skew-x-12" />
+                      </div>
+
                     </div>
                   </motion.div>
                 );

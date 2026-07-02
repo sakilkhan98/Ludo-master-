@@ -12,9 +12,12 @@ import {
   Plus, 
   ChevronRight, 
   Sparkles, 
-  Send 
+  Send,
+  Gift
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import LuckyChestPopup from './LuckyChestPopup';
+import { useEffect } from 'react';
 
 const AVATARS = ['👑', '🦊', '🦁', '🐼', '🐨', '🐯', '🦄', '🐉'];
 
@@ -43,6 +46,37 @@ export default function HomeScreen() {
   const [showOnlineModal, setShowOnlineModal] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [isJoining, setIsJoining] = useState(false);
+  const [showLuckyChest, setShowLuckyChest] = useState(false);
+
+  // Load local guest ranking if guest
+  const [guestCoins, setGuestCoins] = useState(1000);
+
+  useEffect(() => {
+    if (guestUser) {
+      const guestKey = `ludo_guest_ranking_${guestUser.uid}`;
+      const savedCoins = localStorage.getItem(guestKey);
+      if (savedCoins) {
+        setGuestCoins(parseInt(savedCoins, 10));
+      } else {
+        localStorage.setItem(guestKey, '1000');
+        setGuestCoins(1000);
+      }
+    }
+  }, [guestUser]);
+
+  // Listen to local storage changes to keep it updated when spinning/claiming
+  useEffect(() => {
+    const handleStorageChange = () => {
+      if (guestUser) {
+        const savedCoins = localStorage.getItem(`ludo_guest_ranking_${guestUser.uid}`);
+        if (savedCoins) {
+          setGuestCoins(parseInt(savedCoins, 10));
+        }
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [guestUser]);
 
   const isLoggedIn = currentUser || guestUser;
 
@@ -185,8 +219,8 @@ export default function HomeScreen() {
           </span>
           <div>
             <p className="font-extrabold text-sm tracking-tight text-white">{userDisplayName}</p>
-            <p className="text-blue-400 text-[10px] font-semibold mt-0.5 font-mono">
-              ★ {userStats?.ranking || 1000} pts
+            <p className="text-yellow-400 text-[10px] font-bold mt-0.5 font-mono flex items-center gap-1">
+              🪙 {currentUser ? (userStats?.ranking || 1000) : guestCoins} Gold
             </p>
           </div>
         </div>
@@ -201,11 +235,24 @@ export default function HomeScreen() {
       </div>
 
       {/* Hero logo banner */}
-      <div className="text-center mb-8">
+      <div className="text-center mb-4">
         <h1 className="text-4xl font-black tracking-tight bg-gradient-to-r from-amber-400 via-red-500 to-indigo-500 bg-clip-text text-transparent">
           LUDO MASTER
         </h1>
         <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mt-1.5">Online Arena</p>
+      </div>
+
+      {/* Lucky Daily Chest Portal */}
+      <div className="flex justify-center mb-6">
+        <button
+          id="trigger-lucky-chest-btn"
+          onClick={() => setShowLuckyChest(true)}
+          className="relative inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-[#501311] via-[#100e2e] to-[#090724] border border-amber-400/60 hover:border-amber-400 text-amber-300 font-extrabold text-[11px] uppercase tracking-wider shadow-lg shadow-black/50 hover:scale-105 active:scale-95 transition-all animate-pulse"
+        >
+          <span className="text-base">🎁</span>
+          <span>Lucky Daily Chest</span>
+          <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-ping shrink-0" />
+        </button>
       </div>
 
       {/* Main Mode Options */}
@@ -291,8 +338,8 @@ export default function HomeScreen() {
           onClick={() => setActiveMode('leaderboard')}
           className="flex flex-col items-center gap-1 p-2 rounded-2xl hover:bg-white/5 transition text-white/60 hover:text-amber-400"
         >
-          <Award className="w-5 h-5" />
-          <span className="text-[9px] font-bold tracking-wider uppercase">Rankings</span>
+          <Gift className="w-5 h-5" />
+          <span className="text-[9px] font-bold tracking-wider uppercase font-sans">Lucky Spin</span>
         </button>
 
         <button
@@ -490,6 +537,9 @@ export default function HomeScreen() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Exquisite 3D Lucky Daily Chest pop-up page */}
+      <LuckyChestPopup isOpen={showLuckyChest} onClose={() => setShowLuckyChest(false)} />
 
     </div>
   );

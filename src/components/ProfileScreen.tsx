@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
-import { ChevronLeft, Edit2, Check, Award, RefreshCw, Trophy, Medal, Star } from 'lucide-react';
+import { ChevronLeft, Edit2, Check, Award, RefreshCw, Trophy, Medal, Star, Coins } from 'lucide-react';
 import { motion } from 'motion/react';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
@@ -20,6 +20,20 @@ export default function ProfileScreen() {
     totalGames: 4
   };
 
+  // Load local guest ranking if guest
+  const [guestCoins, setGuestCoins] = useState(1000);
+
+  useEffect(() => {
+    if (guestUser) {
+      const guestKey = `ludo_guest_ranking_${guestUser.uid}`;
+      const savedCoins = localStorage.getItem(guestKey);
+      if (savedCoins) {
+        setGuestCoins(parseInt(savedCoins, 10));
+      }
+    }
+  }, [guestUser]);
+
+  const currentCoins = currentUser ? (stats.ranking || 1000) : guestCoins;
   const winRatio = stats.totalGames > 0 ? Math.round((stats.wins / stats.totalGames) * 100) : 0;
 
   const saveProfileUpdates = async () => {
@@ -56,7 +70,7 @@ export default function ProfileScreen() {
   const achievementsList = [
     { id: '1', title: 'First Blood', desc: 'Captured an opponent token on track', unlocked: stats.wins > 0, icon: '⚔️' },
     { id: '2', title: 'Victory Lap', desc: 'Completed a token to central home', unlocked: stats.wins > 0, icon: '🏠' },
-    { id: '3', title: 'Elite Master', desc: 'Surpassed 1,200 ranking points', unlocked: stats.ranking >= 1200, icon: '💎' },
+    { id: '3', title: 'Elite Master', desc: 'Surpassed 1,200 Gold Coins', unlocked: currentCoins >= 1200, icon: '💎' },
     { id: '4', title: 'Undefeated', desc: 'Accumulated 10 game victories', unlocked: stats.wins >= 10, icon: '🔥' }
   ];
 
@@ -153,12 +167,12 @@ export default function ProfileScreen() {
         </div>
 
         <div className="backdrop-blur-xl bg-white/5 border border-white/10 p-4 rounded-2xl flex items-center gap-3 shadow-lg">
-          <div className="p-2.5 bg-blue-500/15 text-blue-400 border border-blue-500/30 rounded-xl">
-            <Award className="w-5 h-5" />
+          <div className="p-2.5 bg-yellow-500/15 text-yellow-400 border border-yellow-500/30 rounded-xl">
+            <Coins className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-white/40 text-[10px] font-bold tracking-wider uppercase">Ranking</p>
-            <p className="text-lg font-black tracking-tight mt-0.5">{stats.ranking}</p>
+            <p className="text-white/40 text-[10px] font-bold tracking-wider uppercase">Gold Coins</p>
+            <p className="text-lg font-black tracking-tight mt-0.5 text-yellow-300 font-mono">{currentCoins}</p>
           </div>
         </div>
 

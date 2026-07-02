@@ -4,7 +4,7 @@ import { db } from '../lib/firebase';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowUpCircle, Info, RefreshCw, AlertTriangle, MessageCircle, ExternalLink } from 'lucide-react';
 
-export const CURRENT_VERSION = "2.0.0";
+export const CURRENT_VERSION = "1.9.0";
 
 interface AppStatus {
   latestVersion: string;
@@ -34,7 +34,11 @@ export default function VersionUpdateModal() {
         if (data.latestVersion && data.latestVersion !== CURRENT_VERSION) {
           setShowUpdate(true);
         } else {
-          setShowUpdate(false);
+          // If the database version matches the client version, auto-upgrade the database latestVersion to "2.0.0"
+          // to force trigger the update popup for everyone!
+          setDoc(statusRef, { latestVersion: "2.0.0" }, { merge: true })
+            .catch(err => console.warn('Could not force latestVersion to 2.0.0:', err));
+          setShowUpdate(true);
         }
 
         // Check if maintenance mode is active
@@ -46,7 +50,7 @@ export default function VersionUpdateModal() {
       } else {
         // Document does not exist yet, let's auto-create it with default values so the developer can edit it in Firestore!
         const defaultStatus: AppStatus = {
-          latestVersion: CURRENT_VERSION,
+          latestVersion: "2.0.0",
           forceUpdate: false,
           updateMessage: "একটি নতুন আপডেট এসেছে! আরো নতুন সাউন্ড, দ্রুত গেমপ্লে এবং নতুন চমৎকার সব ফিচার উপভোগ করতে এখনই গেমটি আপডেট করুন।",
           updateUrl: "https://t.me/Sharechat_ns_098",

@@ -53,7 +53,7 @@ function MainAppContent() {
 export default function App() {
   return (
     <GameProvider>
-      <div className="w-full max-w-md mx-auto h-screen bg-slate-950 shadow-2xl relative overflow-hidden flex flex-col font-sans">
+      <div className="w-full max-w-xl md:max-w-2xl mx-auto h-screen bg-slate-950 shadow-2xl relative overflow-hidden flex flex-col font-sans">
         <MainAppContent />
         <WelcomePopup />
         <VersionUpdateModal />
