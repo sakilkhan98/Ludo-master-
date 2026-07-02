@@ -72,7 +72,7 @@ interface GameContextProps {
   updateSettings: (newSettings: Partial<GameSettings>) => void;
   
   // Room Actions
-  createOnlineRoom: () => Promise<string>;
+  createOnlineRoom: (maxPlayers?: number) => Promise<string>;
   joinOnlineRoom: (roomId: string) => Promise<void>;
   leaveRoom: () => Promise<void>;
   toggleReady: () => Promise<void>;
@@ -89,6 +89,8 @@ interface GameContextProps {
   
   // UI Helpers
   setActiveMode: (mode: 'menu' | 'lobby' | 'game' | 'leaderboard' | 'profile' | 'settings' | 'about') => void;
+  setActiveRoom: (val: RoomState | null | ((prev: RoomState | null) => RoomState | null)) => void;
+  setGameMode: (val: 'offline2' | 'offline4' | 'online' | 'practice' | null) => void;
   claimDailyReward: () => Promise<void>;
 }
 
@@ -105,12 +107,50 @@ const DEFAULT_SETTINGS: GameSettings = {
 const AVATARS = ['👑', '🦊', '🦁', '🐼', '🐨', '🐯', '🦄', '🐉'];
 
 export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
-  const [guestUser, setGuestUser] = useState<{ uid: string; name: string; avatar: string } | null>(null);
-  const [userStats, setUserStats] = useState<UserStats | null>(null);
+  const [currentUser, setCurrentUserState] = useState<FirebaseUser | null>(null);
+  const currentUserRef = useRef<FirebaseUser | null>(null);
+  const setCurrentUser = (val: FirebaseUser | null) => {
+    currentUserRef.current = val;
+    setCurrentUserState(val);
+  };
+
+  const [guestUser, setGuestUserState] = useState<{ uid: string; name: string; avatar: string } | null>(null);
+  const guestUserRef = useRef<{ uid: string; name: string; avatar: string } | null>(null);
+  const setGuestUser = (val: { uid: string; name: string; avatar: string } | null) => {
+    guestUserRef.current = val;
+    setGuestUserState(val);
+  };
+
+  const [userStats, setUserStatsState] = useState<UserStats | null>(null);
+  const userStatsRef = useRef<UserStats | null>(null);
+  const setUserStats = (val: UserStats | null) => {
+    userStatsRef.current = val;
+    setUserStatsState(val);
+  };
+
   const [settings, setSettings] = useState<GameSettings>(DEFAULT_SETTINGS);
-  const [activeRoom, setActiveRoom] = useState<RoomState | null>(null);
-  const [activeMode, setActiveMode] = useState<'menu' | 'lobby' | 'game' | 'leaderboard' | 'profile' | 'settings' | 'about'>('menu');
+
+  const [activeRoom, setActiveRoomState] = useState<RoomState | null>(null);
+  const activeRoomRef = useRef<RoomState | null>(null);
+  const setActiveRoom = (val: RoomState | null | ((prev: RoomState | null) => RoomState | null)) => {
+    if (typeof val === 'function') {
+      setActiveRoomState((prev) => {
+        const next = val(prev);
+        activeRoomRef.current = next;
+        return next;
+      });
+    } else {
+      activeRoomRef.current = val;
+      setActiveRoomState(val);
+    }
+  };
+
+  const [activeMode, setActiveModeState] = useState<'menu' | 'lobby' | 'game' | 'leaderboard' | 'profile' | 'settings' | 'about'>('menu');
+  const activeModeRef = useRef<'menu' | 'lobby' | 'game' | 'leaderboard' | 'profile' | 'settings' | 'about'>('menu');
+  const setActiveMode = (val: 'menu' | 'lobby' | 'game' | 'leaderboard' | 'profile' | 'settings' | 'about') => {
+    activeModeRef.current = val;
+    setActiveModeState(val);
+  };
   const [gameMode, setGameMode] = useState<'offline2' | 'offline4' | 'online' | 'practice' | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isRolling, setIsRollingState] = useState<boolean>(false);
@@ -312,9 +352,15 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const loginAsGuest = async (name: string, avatar: string) => {
     try {
       setIsLoading(true);
-      const userCredential = await signInAnonymously(auth);
+      let guestUid = `guest_${Math.floor(Math.random() * 1000000)}`;
+      try {
+        const userCredential = await signInAnonymously(auth);
+        guestUid = userCredential.user.uid;
+      } catch (authErr) {
+        console.warn('Firebase Anonymous Auth not enabled or failed, falling back to local guest UID:', authErr);
+      }
       const guest = {
-        uid: userCredential.user.uid,
+        uid: guestUid,
         name: name || `Guest #${Math.floor(Math.random() * 900 + 100)}`,
         avatar: avatar || AVATARS[0]
       };
@@ -349,14 +395,14 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Helper to fetch current profile
   const getActiveProfile = () => {
-    if (currentUser) {
+    if (currentUserRef.current) {
       return {
-        uid: currentUser.uid,
-        name: userStats?.name || currentUser.displayName || 'Player',
-        avatar: userStats?.avatar || '👑'
+        uid: currentUserRef.current.uid,
+        name: userStatsRef.current?.name || currentUserRef.current.displayName || 'Player',
+        avatar: userStatsRef.current?.avatar || '👑'
       };
-    } else if (guestUser) {
-      return guestUser;
+    } else if (guestUserRef.current) {
+      return guestUserRef.current;
     }
     return {
       uid: 'offline_1',
@@ -482,7 +528,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // ----------------- ONLINE ROOM ACTIONS -----------------
-  const createOnlineRoom = async (): Promise<string> => {
+  const createOnlineRoom = async (maxPlayers: number = 4): Promise<string> => {
     setIsLoading(true);
     const profile = getActiveProfile();
     const code = Math.floor(Math.random() * 900000 + 100000).toString(); // 6 digit code
@@ -506,6 +552,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       hostId: profile.uid,
       players: initialPlayers,
       status: 'waiting',
+      maxPlayers,
       turnPlayerId: null,
       dice: {
         value: 1,
@@ -550,26 +597,50 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const snap = await getDoc(roomRef);
       if (!snap.exists()) {
-        throw new Error('Room not found! Double check the code.');
+        throw new Error('Room not found! Double check the 6-digit code.');
       }
 
       const room = snap.data() as RoomState;
-      if (room.status !== 'waiting') {
+      if (!room) {
+        throw new Error('Room details are corrupted or empty.');
+      }
+
+      if (!room.players) {
+        room.players = {};
+      }
+      if (!room.chat) {
+        room.chat = [];
+      }
+
+      const isAlreadyInRoom = !!room.players[profile.uid];
+
+      // Allow players already in the room to rejoin even if game started/finished
+      if (room.status !== 'waiting' && !isAlreadyInRoom) {
         throw new Error('Game already started or finished in this room.');
       }
 
       const currentPlayers = Object.values(room.players);
-      if (currentPlayers.length >= 4) {
-        throw new Error('Room is already full! Max 4 players.');
+      const maxPlayers = room.maxPlayers || 4;
+      if (currentPlayers.length >= maxPlayers && !isAlreadyInRoom) {
+        throw new Error(`Room is already full! Max ${maxPlayers} players allowed.`);
       }
 
       // Check if already in players
-      if (!room.players[profile.uid]) {
+      if (!isAlreadyInRoom) {
         // Assign a color based on slot availability
-        const assignedColors: PlayerColor[] = ['red', 'green', 'yellow', 'blue'];
-        const occupiedColors = currentPlayers.map(p => p.color);
-        const freeColor = assignedColors.find(c => !occupiedColors.includes(c)) || 'green';
-        const freeIdx = COLOR_INDEX_MAP.indexOf(freeColor);
+        let freeColor: PlayerColor = 'green';
+        let freeIdx = 1;
+
+        if (maxPlayers === 2) {
+          // Opposite sides are Red (Host) and Yellow (Opponent)
+          freeColor = 'yellow';
+          freeIdx = 2;
+        } else {
+          const assignedColors: PlayerColor[] = ['red', 'green', 'yellow', 'blue'];
+          const occupiedColors = currentPlayers.map(p => p.color);
+          freeColor = assignedColors.find(c => !occupiedColors.includes(c)) || 'green';
+          freeIdx = COLOR_INDEX_MAP.indexOf(freeColor);
+        }
 
         room.players[profile.uid] = {
           uid: profile.uid,
@@ -599,15 +670,26 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           chat: room.chat,
           lastActivity: Date.now()
         });
+      } else {
+        // Mark player as back online
+        const updatedPlayers = { ...room.players };
+        updatedPlayers[profile.uid].isOnline = true;
+        updatedPlayers[profile.uid].lastActive = Date.now();
+
+        await updateDoc(roomRef, {
+          players: updatedPlayers,
+          lastActivity: Date.now()
+        });
       }
 
       setActiveRoom(room);
       setGameMode('online');
-      setActiveMode('lobby');
+      setActiveMode(room.status === 'playing' ? 'game' : 'lobby');
       subscribeToRoom(code);
     } catch (e: any) {
-      setIsLoading(false);
       throw e;
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -734,7 +816,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       // If someone else rolled the dice, play the rolling animation locally for 600ms
-      const oldRoom = activeRoom;
+      const oldRoom = activeRoomRef.current;
       const someoneElseRolled = oldRoom && 
         !oldRoom.dice.rolled && 
         room.dice.rolled && 
@@ -753,7 +835,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       // Transition screen mode if status changed to playing
-      if (room.status === 'playing' && activeMode === 'lobby') {
+      if (room.status === 'playing' && activeModeRef.current === 'lobby') {
         setActiveMode('game');
       }
 
@@ -1620,6 +1702,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         moveToken,
         resetToMenu,
         setActiveMode,
+        setActiveRoom,
+        setGameMode,
         claimDailyReward
       }}
     >

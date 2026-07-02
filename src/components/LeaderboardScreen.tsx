@@ -96,7 +96,7 @@ export default function LeaderboardScreen() {
 
           return (
             <motion.div
-              key={player.userId || idx}
+              key={player.userId ? `leader-user-${player.userId}` : `leader-fallback-${idx}`}
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.05 * idx }}

@@ -12,6 +12,8 @@ import LeaderboardScreen from './components/LeaderboardScreen';
 import SettingsScreen from './components/SettingsScreen';
 import ProfileScreen from './components/ProfileScreen';
 import AboutDeveloper from './components/AboutDeveloper';
+import WelcomePopup from './components/WelcomePopup';
+import VersionUpdateModal from './components/VersionUpdateModal';
 
 function MainAppContent() {
   const { activeMode, isLoading } = useGame();
@@ -53,6 +55,8 @@ export default function App() {
     <GameProvider>
       <div className="w-full max-w-md mx-auto h-screen bg-slate-950 shadow-2xl relative overflow-hidden flex flex-col font-sans">
         <MainAppContent />
+        <WelcomePopup />
+        <VersionUpdateModal />
       </div>
     </GameProvider>
   );

@@ -37,7 +37,8 @@ export default function GameBoard() {
     moveToken,
     leaveRoom,
     sendChatMessage,
-    settings
+    settings,
+    updateSettings
   } = useGame();
 
   const [timeLeft, setTimeLeft] = useState<number>(30);
@@ -98,7 +99,7 @@ export default function GameBoard() {
 
       playPopSound();
 
-      // Clear reaction bubble after 4 seconds
+      // Clear reaction bubble after 3 seconds
       const timer = setTimeout(() => {
         setActiveReactions(prev => {
           if (prev[color]?.id === latestMsg.id) {
@@ -106,7 +107,7 @@ export default function GameBoard() {
           }
           return prev;
         });
-      }, 4000);
+      }, 3000);
 
       return () => clearTimeout(timer);
     }
@@ -118,7 +119,7 @@ export default function GameBoard() {
     gameMode === 'online' 
       ? activeRoom.turnPlayerId === profile?.uid
       : gameMode === 'practice'
-        ? (activeRoom.players[activeRoom.turnPlayerId || '']?.uid === profile?.uid)
+        ? activeRoom.turnPlayerId === 'p_red'
         : true; // In offline2 and offline4, anyone's turn is playable on this device
 
   // Turn Timer Countdown (30 seconds)
@@ -260,13 +261,28 @@ export default function GameBoard() {
           <span className="text-xs text-white/40 font-mono">Room: {activeRoom.roomId}</span>
         </div>
 
-        {/* Turn Timer visual progress */}
-        {activeRoom.status === 'playing' && (
-          <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-full py-1.5 px-3.5 shadow-lg">
-            <span className={`w-2.5 h-2.5 rounded-full ${timeLeft <= 7 ? 'bg-red-500 animate-ping' : 'bg-green-500'}`} />
-            <span className="text-xs font-bold font-mono text-white/70">Turn Timer: {timeLeft}s</span>
-          </div>
-        )}
+        {/* Turn Timer visual progress and Sound Toggle */}
+        <div className="flex items-center gap-2">
+          {activeRoom.status === 'playing' && (
+            <div className="flex items-center gap-2.5 bg-white/5 border border-white/10 rounded-full py-1 px-2.5 shadow-lg">
+              <span className={`w-2 h-2 rounded-full ${timeLeft <= 7 ? 'bg-red-500 animate-ping' : 'bg-green-500'}`} />
+              <span className="text-[11px] font-bold font-mono text-white/70">{timeLeft}s</span>
+            </div>
+          )}
+
+          <button
+            id="board-sound-toggle-btn"
+            onClick={() => updateSettings({ soundEnabled: !settings.soundEnabled })}
+            className={`p-1.5 rounded-lg border transition-all duration-300 ${
+              settings.soundEnabled 
+                ? 'bg-indigo-600/25 border-indigo-500/40 text-indigo-300 hover:bg-indigo-600/40 hover:scale-105' 
+                : 'bg-white/5 border-white/10 text-white/30 hover:bg-white/10'
+            }`}
+            title={settings.soundEnabled ? "Mute Sound" : "Unmute Sound"}
+          >
+            {settings.soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+          </button>
+        </div>
       </div>
 
       {/* Main Game Screen Board Area */}
@@ -488,7 +504,7 @@ export default function GameBoard() {
             </div>
 
             {/* 7. Active Tokens Layer */}
-            {(Object.entries(activeRoom.boardState) as [PlayerColor, number[]][]).map(([color, tokens]) => {
+            {(Object.entries(activeRoom.boardState) as [PlayerColor, number[]][]).flatMap(([color, tokens]) => {
               const colorMeta = COLOR_CLASSES[color as PlayerColor];
               const isPlayerColor = color === turnPlayer?.color;
 

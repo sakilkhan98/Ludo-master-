@@ -40,6 +40,7 @@ export default function HomeScreen() {
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [roomCodeInput, setRoomCodeInput] = useState('');
   const [showOfflineModal, setShowOfflineModal] = useState(false);
+  const [showOnlineModal, setShowOnlineModal] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [isJoining, setIsJoining] = useState(false);
 
@@ -50,9 +51,10 @@ export default function HomeScreen() {
     loginAsGuest(guestName, guestAvatar);
   };
 
-  const handleCreateRoom = async () => {
+  const handleCreateRoom = async (maxPlayers: number) => {
     try {
-      await createOnlineRoom();
+      await createOnlineRoom(maxPlayers);
+      setShowOnlineModal(false);
     } catch (e: any) {
       alert(e.message || 'Failed to create room.');
     }
@@ -212,7 +214,7 @@ export default function HomeScreen() {
         {/* Play Online Match creator (Green Bento Card style) */}
         <button
           id="quick-online-match-btn"
-          onClick={handleCreateRoom}
+          onClick={() => setShowOnlineModal(true)}
           className="w-full p-5 bg-gradient-to-br from-green-500/80 to-emerald-700/80 rounded-3xl flex items-center justify-between border border-white/20 shadow-2xl transition duration-200 active:scale-98 text-left"
         >
           <div className="flex items-center gap-4 text-left">
@@ -429,6 +431,56 @@ export default function HomeScreen() {
                 <button
                   id="cancel-offline-modal-btn"
                   onClick={() => setShowOfflineModal(false)}
+                  className="w-full py-3 text-white/40 font-bold text-xs hover:text-white/70 transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 3. ONLINE MODE SELECTOR MODAL DIALOG */}
+      <AnimatePresence>
+        {showOnlineModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-6"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 30 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 30 }}
+              className="backdrop-blur-xl bg-slate-950/85 border border-white/15 rounded-3xl p-6 w-full max-w-sm text-center relative shadow-2xl"
+            >
+              <h3 className="text-lg font-black text-white">Online Room Setup</h3>
+              <p className="text-white/50 text-xs mt-1">Choose game capacity for your online room</p>
+              
+              <div className="mt-6 space-y-3.5">
+                <button
+                  id="online-2p-btn"
+                  onClick={() => handleCreateRoom(2)}
+                  className="w-full py-4 backdrop-blur-md bg-white/5 hover:bg-white/15 border border-white/10 hover:border-blue-500/40 rounded-2xl transition flex items-center justify-center gap-3 active:scale-95 text-white font-bold"
+                >
+                  <Users className="w-5 h-5 text-blue-400" />
+                  <span className="font-bold text-sm">2 Players (Red vs Yellow)</span>
+                </button>
+
+                <button
+                  id="online-4p-btn"
+                  onClick={() => handleCreateRoom(4)}
+                  className="w-full py-4 backdrop-blur-md bg-white/5 hover:bg-white/15 border border-white/10 hover:border-green-500/40 rounded-2xl transition flex items-center justify-center gap-3 active:scale-95 text-white font-bold"
+                >
+                  <Users className="w-5 h-5 text-green-400" />
+                  <span className="font-bold text-sm">4 Players (All Colors)</span>
+                </button>
+
+                <button
+                  id="cancel-online-modal-btn"
+                  onClick={() => setShowOnlineModal(false)}
                   className="w-full py-3 text-white/40 font-bold text-xs hover:text-white/70 transition"
                 >
                   Cancel

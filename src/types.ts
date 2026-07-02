@@ -47,6 +47,7 @@ export interface RoomState {
   hostId: string;
   players: Record<string, PlayerState>; // uid -> PlayerState
   status: 'waiting' | 'playing' | 'finished';
+  maxPlayers?: number;
   turnPlayerId: string | null; // UID of player whose turn it is
   dice: DiceState;
   boardState: Record<PlayerColor, number[]>; // color -> [t0, t1, t2, t3] stepCounts

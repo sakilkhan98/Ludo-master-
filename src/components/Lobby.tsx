@@ -1,13 +1,53 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { ChevronLeft, Copy, Check, Users, ShieldAlert, CheckCircle, RefreshCw } from 'lucide-react';
 import { motion } from 'motion/react';
 import { COLOR_CLASSES, COLOR_NAMES } from '../utils/ludoBoard';
-import { PlayerColor, PlayerState } from '../types';
+import { PlayerColor, PlayerState, RoomState } from '../types';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 
 export default function Lobby() {
-  const { activeRoom, leaveRoom, toggleReady, startOnlineGame, currentUser, guestUser } = useGame();
+  const { 
+    activeRoom, 
+    setActiveRoom, 
+    leaveRoom, 
+    toggleReady, 
+    startOnlineGame, 
+    currentUser, 
+    guestUser, 
+    setActiveMode, 
+    setGameMode 
+  } = useGame();
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (!activeRoom?.roomId) return;
+
+    const docRef = doc(db, 'rooms', activeRoom.roomId);
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      if (!docSnap.exists()) {
+        setActiveRoom(null);
+        setGameMode(null);
+        setActiveMode('menu');
+        return;
+      }
+
+      const roomData = docSnap.data() as RoomState;
+      setActiveRoom(roomData);
+
+      // Transition screen mode if status changed to playing
+      if (roomData.status === 'playing') {
+        setActiveMode('game');
+      }
+    }, (error) => {
+      console.error("Lobby room snapshot error:", error);
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [activeRoom?.roomId, setActiveRoom, setActiveMode, setGameMode]);
 
   if (!activeRoom) return null;
 
@@ -27,8 +67,16 @@ export default function Lobby() {
 
   const profile = currentUser ? { uid: currentUser.uid, name: currentUser.displayName || 'Player' } : guestUser;
   const isHost = activeRoom.hostId === profile?.uid;
+  const maxPlayers = activeRoom.maxPlayers || 4;
   const everyoneReady = playersList.every((p) => p.isHost || p.isReady);
   const canStart = playersList.length >= 2 && everyoneReady;
+
+  const filteredSlots = slots.filter((slot) => {
+    if (maxPlayers === 2) {
+      return slot.color === 'red' || slot.color === 'yellow';
+    }
+    return true;
+  });
 
   return (
     <div id="lobby-screen" className="flex flex-col h-full bg-transparent text-white p-5 select-none overflow-y-auto relative z-10">
@@ -72,10 +120,10 @@ export default function Lobby() {
       <div className="flex-1 space-y-3.5 mb-6">
         <div className="flex items-center gap-2 px-1 mb-2">
           <Users className="w-4.5 h-4.5 text-white/40" />
-          <h2 className="text-sm font-semibold text-white/40">Player Lineup ({playersList.length}/4)</h2>
+          <h2 className="text-sm font-semibold text-white/40">Player Lineup ({playersList.length}/{maxPlayers})</h2>
         </div>
 
-        {slots.map((slot) => {
+        {filteredSlots.map((slot) => {
           // Find player assigned to this color
           const player = playersList.find((p) => p.color === slot.color);
           const colorMeta = COLOR_CLASSES[slot.color];
@@ -168,7 +216,7 @@ export default function Lobby() {
             onClick={toggleReady}
             className="w-full py-4 bg-gradient-to-r from-blue-500/80 to-indigo-600/80 hover:from-blue-400 hover:to-indigo-500 text-white font-bold text-sm tracking-wide rounded-2xl transition border border-white/10 shadow-lg active:scale-95 shadow-blue-500/10"
           >
-            {activeRoom.players[currentUser?.uid || '']?.isReady ? 'Cancel Ready' : 'I am Ready!'}
+            {activeRoom.players[profile?.uid || '']?.isReady ? 'Cancel Ready' : 'I am Ready!'}
           </button>
         )}
       </div>
