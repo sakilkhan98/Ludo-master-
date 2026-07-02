@@ -1,0 +1,6 @@
+{
+  "name": "Ludo Master Online",
+  "description": "A professional real-time multiplayer and offline Ludo game with modern visual effects, animations, turn timers, and leaderboards.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

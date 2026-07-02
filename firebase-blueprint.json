@@ -1,0 +1,64 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "User account statistics and profile information",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "The unique user ID" },
+        "name": { "type": "string", "description": "Display name of the user" },
+        "avatar": { "type": "string", "description": "Avatar ID or image URL" },
+        "wins": { "type": "integer", "description": "Total number of wins" },
+        "losses": { "type": "integer", "description": "Total number of losses" },
+        "ranking": { "type": "integer", "description": "Ranking/elo points" },
+        "totalGames": { "type": "integer", "description": "Total games played" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
+      },
+      "required": ["userId", "name", "avatar"]
+    },
+    "Room": {
+      "title": "Ludo Room",
+      "description": "A game room for Ludo multiplayer",
+      "type": "object",
+      "properties": {
+        "roomId": { "type": "string", "description": "The 6-digit room code" },
+        "hostId": { "type": "string", "description": "The user ID of the host player" },
+        "players": { "type": "object", "description": "Map of player UIDs to player game state" },
+        "status": { "type": "string", "enum": ["waiting", "playing", "finished"], "description": "Status of the game" },
+        "turnPlayerId": { "type": "string", "description": "Whose turn it currently is" },
+        "dice": { "type": "object", "description": "Dice state: value and rolled status" },
+        "boardState": { "type": "object", "description": "Current position (stepCount) of all 16 tokens" },
+        "chat": { "type": "array", "description": "Array of chat messages" },
+        "winner": { "type": "string", "description": "UID of the winner if finished" },
+        "lastActivity": { "type": "string", "format": "date-time", "description": "Last action timestamp for timeout checks" }
+      },
+      "required": ["roomId", "hostId", "players", "status"]
+    },
+    "Match": {
+      "title": "Match History",
+      "description": "A record of a completed match",
+      "type": "object",
+      "properties": {
+        "matchId": { "type": "string", "description": "Unique match ID" },
+        "players": { "type": "array", "description": "List of player IDs involved" },
+        "winner": { "type": "string", "description": "UID of the winner" },
+        "date": { "type": "string", "format": "date-time", "description": "Match end date" }
+      },
+      "required": ["matchId", "players", "winner", "date"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile collection indexed by userId"
+    },
+    "/rooms/{roomId}": {
+      "schema": "Room",
+      "description": "Active multiplayer rooms indexed by 6-digit room code"
+    },
+    "/matches/{matchId}": {
+      "schema": "Match",
+      "description": "Completed match history"
+    }
+  }
+}
