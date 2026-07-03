@@ -330,6 +330,157 @@ export function playVictorySound() {
   }
 }
 
+// Play premium heavy electronic music: dynamic synth chords, sub-bass thuds, and an epic arpeggiator drop
+export function playHeavyUpdateMusic() {
+  if (!currentSettings.soundEnabled) return;
+  try {
+    const ctx = getAudioContext();
+    const now = ctx.currentTime;
+
+    const playNote = (freq: number, startTime: number, duration: number, type: OscillatorType = 'sine', volume = 0.15) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, startTime);
+      
+      // Attack-Decay envelope
+      gain.gain.setValueAtTime(0.01, startTime);
+      gain.gain.linearRampToValueAtTime(volume, startTime + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+      
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(startTime);
+      osc.stop(startTime + duration + 0.05);
+    };
+
+    // Chord progressions in C minor
+    const bassProgression = [130.81, 155.56, 196.00, 207.65]; // C3, Eb3, G3, Ab3
+    const leadProgression = [
+      [261.63, 311.13, 392.00, 523.25], // C minor arp
+      [311.13, 392.00, 466.16, 622.25], // Eb major arp
+      [392.00, 466.16, 587.33, 783.99], // G minor arp
+      [415.30, 523.25, 622.25, 830.61]  // Ab major arp
+    ];
+
+    const tempo = 130; // High energy 130 BPM
+    const beatDuration = 60 / tempo; // ~0.46s
+    const stepDuration = beatDuration / 4; // ~0.115s per 16th note
+
+    // Generate heavy sequence of 32 steps (approx 3.7 seconds total)
+    for (let step = 0; step < 32; step++) {
+      const stepTime = now + (step * stepDuration);
+      const chordIdx = Math.floor(step / 8) % 4;
+      const beatInChord = step % 8;
+
+      // 1. Heavy bass drum thud (steps 0, 4, 8, etc.)
+      if (beatInChord === 0 || beatInChord === 4) {
+        const kickOsc = ctx.createOscillator();
+        const kickGain = ctx.createGain();
+        kickOsc.type = 'sine';
+        kickOsc.frequency.setValueAtTime(160, stepTime);
+        kickOsc.frequency.exponentialRampToValueAtTime(42, stepTime + 0.16);
+        
+        kickGain.gain.setValueAtTime(0.55, stepTime);
+        kickGain.gain.exponentialRampToValueAtTime(0.001, stepTime + 0.25);
+        
+        kickOsc.connect(kickGain);
+        kickGain.connect(ctx.destination);
+        kickOsc.start(stepTime);
+        kickOsc.stop(stepTime + 0.28);
+
+        // Click accent
+        const clickOsc = ctx.createOscillator();
+        const clickGain = ctx.createGain();
+        clickOsc.type = 'triangle';
+        clickOsc.frequency.setValueAtTime(700, stepTime);
+        clickOsc.frequency.exponentialRampToValueAtTime(120, stepTime + 0.04);
+        clickGain.gain.setValueAtTime(0.18, stepTime);
+        clickGain.gain.exponentialRampToValueAtTime(0.001, stepTime + 0.04);
+        clickOsc.connect(clickGain);
+        clickGain.connect(ctx.destination);
+        clickOsc.start(stepTime);
+        clickOsc.stop(stepTime + 0.05);
+      }
+
+      // 2. Heavy rolling offbeat bass synth (steps 1, 3, 5, 7)
+      if (beatInChord % 2 === 1) {
+        const bassFreq = bassProgression[chordIdx] / 2; // C2, Eb2, etc. (deep growl)
+        playNote(bassFreq, stepTime, stepDuration * 0.9, 'sawtooth', 0.22);
+      }
+
+      // 3. Upbeat fast lead arpeggiator notes
+      const arpeggioNotes = leadProgression[chordIdx];
+      const noteToPlay = arpeggioNotes[beatInChord % arpeggioNotes.length];
+      playNote(noteToPlay, stepTime, stepDuration * 0.8, 'sawtooth', 0.12);
+      playNote(noteToPlay * 2, stepTime, stepDuration * 0.55, 'sine', 0.06);
+
+      // 4. Snare drum clap on beats 2 and 6
+      if (beatInChord === 2 || beatInChord === 6) {
+        const snareOsc = ctx.createOscillator();
+        const snareGain = ctx.createGain();
+        snareOsc.type = 'triangle';
+        snareOsc.frequency.setValueAtTime(240, stepTime);
+        snareOsc.frequency.exponentialRampToValueAtTime(90, stepTime + 0.14);
+        
+        snareGain.gain.setValueAtTime(0.25, stepTime);
+        snareGain.gain.exponentialRampToValueAtTime(0.001, stepTime + 0.18);
+        
+        snareOsc.connect(snareGain);
+        snareGain.connect(ctx.destination);
+        snareOsc.start(stepTime);
+        snareOsc.stop(stepTime + 0.2);
+
+        // Noise element
+        const noiseOsc = ctx.createOscillator();
+        const noiseGain = ctx.createGain();
+        noiseOsc.type = 'sawtooth';
+        noiseOsc.frequency.setValueAtTime(1000 + Math.random() * 300, stepTime);
+        noiseOsc.frequency.exponentialRampToValueAtTime(60, stepTime + 0.1);
+        
+        noiseGain.gain.setValueAtTime(0.15, stepTime);
+        noiseGain.gain.exponentialRampToValueAtTime(0.001, stepTime + 0.1);
+        
+        noiseOsc.connect(noiseGain);
+        noiseGain.connect(ctx.destination);
+        noiseOsc.start(stepTime);
+        noiseOsc.stop(stepTime + 0.12);
+      }
+    }
+
+    // Epic drop/ending final explosion blast
+    const endTime = now + (32 * stepDuration);
+    playNote(65.41, endTime, 1.4, 'sine', 0.6); // Deep thumping Sub-C
+    const finalChord = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99]; // Epic C Maj Chord
+    finalChord.forEach((freq) => {
+      playNote(freq, endTime, 1.6, 'sawtooth', 0.18);
+      playNote(freq * 1.5, endTime, 1.2, 'triangle', 0.08); // Perfect fifth high accent
+      playNote(freq * 2, endTime, 1.4, 'sine', 0.07);
+    });
+
+    // Elegant descending sweep
+    const sweepOsc = ctx.createOscillator();
+    const sweepGain = ctx.createGain();
+    sweepOsc.type = 'sawtooth';
+    sweepOsc.frequency.setValueAtTime(1600, endTime);
+    sweepOsc.frequency.exponentialRampToValueAtTime(80, endTime + 1.4);
+    
+    sweepGain.gain.setValueAtTime(0.24, endTime);
+    sweepGain.gain.exponentialRampToValueAtTime(0.001, endTime + 1.4);
+    
+    sweepOsc.connect(sweepGain);
+    sweepGain.connect(ctx.destination);
+    sweepOsc.start(endTime);
+    sweepOsc.stop(endTime + 1.45);
+
+    // Dynamic haptic vibration pattern
+    triggerVibration([100, 50, 100, 50, 150, 80, 200, 100, 500]);
+
+  } catch (err) {
+    console.warn('Audio error in playHeavyUpdateMusic:', err);
+  }
+}
+
 // Vibration Support
 export function triggerVibration(pattern: number | number[]) {
   if (!currentSettings.vibrationEnabled) return;

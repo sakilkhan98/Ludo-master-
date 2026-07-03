@@ -9,6 +9,7 @@ import {
 import { PlayerColor } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { Star, Shield, HelpCircle, Trophy, Volume2, VolumeX, PhoneOff, ArrowRight, MessageCircle, Globe } from 'lucide-react';
+import confetti from 'canvas-confetti';
 
 const DICE_CORNER_CLASSES: Record<PlayerColor, string> = {
   red: 'top-1 left-1 md:top-2 md:left-2',
@@ -54,6 +55,63 @@ export default function GameBoard() {
   });
 
   const [showQuickChat, setShowQuickChat] = useState(false);
+
+  // Trigger high-impact celebration when a player successfully moves all pieces to home base (wins the Ludo game)
+  useEffect(() => {
+    if (activeRoom.status === 'finished') {
+      // 1. Initial big burst from the center of the screen
+      confetti({
+        particleCount: 180,
+        spread: 90,
+        origin: { y: 0.55 },
+        colors: ['#fbbf24', '#f59e0b', '#3b82f6', '#10b981', '#ef4444', '#8b5cf6', '#ec4899', '#ffffff']
+      });
+
+      // 2. Continuous fireworks and confetti shower on the sides for a high-impact duration
+      const duration = 6 * 1000; // 6 seconds of intense celebration
+      const animationEnd = Date.now() + duration;
+      const defaults = { startVelocity: 35, spread: 360, ticks: 75, zIndex: 1000 };
+
+      const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
+
+      const interval = setInterval(() => {
+        const timeLeft = animationEnd - Date.now();
+
+        if (timeLeft <= 0) {
+          clearInterval(interval);
+          return;
+        }
+
+        const particleCount = 45 * (timeLeft / duration);
+
+        // Burst on the left side
+        confetti({
+          ...defaults,
+          particleCount,
+          origin: { x: randomInRange(0.1, 0.35), y: Math.random() - 0.2 },
+          colors: ['#fbbf24', '#f59e0b', '#d97706', '#ef4444']
+        });
+        // Burst on the right side
+        confetti({
+          ...defaults,
+          particleCount,
+          origin: { x: randomInRange(0.65, 0.9), y: Math.random() - 0.2 },
+          colors: ['#60a5fa', '#3b82f6', '#2563eb', '#10b981']
+        });
+        // Scattered bursts in the middle
+        if (Math.random() > 0.4) {
+          confetti({
+            ...defaults,
+            particleCount: 25,
+            origin: { x: randomInRange(0.4, 0.6), y: Math.random() - 0.1 },
+            colors: ['#a7f3d0', '#fb7185', '#c084fc', '#fde047']
+          });
+        }
+      }, 300);
+
+      return () => clearInterval(interval);
+    }
+  }, [activeRoom.status]);
 
   // Local bubble pop sound synthesizer
   const playPopSound = () => {
@@ -785,36 +843,98 @@ export default function GameBoard() {
 
       {/* Victory Congratulation Dialog overlay */}
       <AnimatePresence>
-        {activeRoom.status === 'finished' && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/40 backdrop-blur-xl z-50 flex flex-col items-center justify-center p-6"
-          >
-            <motion.div
-              initial={{ scale: 0.8, y: 50 }}
-              animate={{ scale: 1, y: 0 }}
-              className="backdrop-blur-2xl bg-white/5 border border-white/10 rounded-3xl p-8 max-w-sm text-center relative overflow-hidden shadow-2xl shadow-amber-500/10"
-            >
-              {/* Confetti vectors or stars */}
-              <div className="text-6xl mb-4">🏆</div>
-              <h2 className="text-3xl font-black text-amber-400 tracking-tight">VICTORY!</h2>
-              <p className="text-white font-extrabold text-lg mt-2">{activeRoom.winnerName}</p>
-              <p className="text-white/50 text-xs mt-1">Has claimed the ultimate title of Ludo Master!</p>
+        {activeRoom.status === 'finished' && (() => {
+          const winnerPlayer = activeRoom.winnerId ? activeRoom.players[activeRoom.winnerId] : null;
+          const winnerColor = winnerPlayer ? winnerPlayer.color : 'yellow';
+          const winnerColorGlow = 
+            winnerColor === 'red' ? 'shadow-red-500/20 border-red-500/30' :
+            winnerColor === 'green' ? 'shadow-green-500/20 border-green-500/30' :
+            winnerColor === 'yellow' ? 'shadow-yellow-500/20 border-yellow-500/30' :
+            'shadow-blue-500/20 border-blue-500/30';
+          
+          const winnerColorText = 
+            winnerColor === 'red' ? 'text-red-400 drop-shadow-[0_0_8px_rgba(239,68,68,0.4)]' :
+            winnerColor === 'green' ? 'text-green-400 drop-shadow-[0_0_8px_rgba(16,185,129,0.4)]' :
+            winnerColor === 'yellow' ? 'text-yellow-400 drop-shadow-[0_0_8px_rgba(245,158,11,0.4)]' :
+            'text-blue-400 drop-shadow-[0_0_8px_rgba(59,130,246,0.4)]';
 
-              <div className="mt-8 space-y-3">
-                <button
-                  id="victory-main-menu-btn"
-                  onClick={leaveRoom}
-                  className="w-full py-3 px-6 bg-gradient-to-r from-amber-500/80 to-yellow-600/80 border border-white/10 text-white font-black text-sm rounded-xl transition shadow-lg shadow-amber-500/10"
+          return (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 backdrop-blur-xl z-50 flex flex-col items-center justify-center p-6"
+            >
+              <motion.div
+                initial={{ scale: 0.8, y: 50, opacity: 0 }}
+                animate={{ scale: 1, y: 0, opacity: 1 }}
+                transition={{ type: "spring", duration: 0.8, bounce: 0.3 }}
+                className={`backdrop-blur-2xl bg-slate-900/80 border ${winnerColorGlow} rounded-3xl p-8 w-full max-w-sm text-center relative overflow-hidden shadow-2xl`}
+              >
+                {/* Rotating golden radiant light behind trophy */}
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                  className="absolute -top-16 left-1/2 -translate-x-1/2 w-48 h-48 bg-gradient-to-tr from-amber-500/10 to-yellow-500/10 rounded-full blur-3xl -z-10"
+                />
+
+                {/* Sparkling Floating Stars */}
+                <div className="absolute top-6 left-6 animate-pulse text-amber-400 opacity-60 text-lg">✦</div>
+                <div className="absolute top-12 right-8 animate-bounce text-amber-300 opacity-70 text-sm">✦</div>
+                <div className="absolute bottom-16 left-8 animate-bounce text-yellow-400 opacity-50 text-xs">✦</div>
+                <div className="absolute bottom-12 right-12 animate-pulse text-amber-500 opacity-60 text-sm">✦</div>
+
+                {/* High-impact trophy with bounce */}
+                <motion.div
+                  animate={{ y: [0, -10, 0] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                  className="text-7xl mb-4 drop-shadow-[0_10px_20px_rgba(245,158,11,0.5)] flex justify-center"
                 >
-                  Return to Menu
-                </button>
-              </div>
+                  🏆
+                </motion.div>
+
+                {/* Title */}
+                <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 tracking-tight uppercase">
+                  Victory!
+                </h2>
+
+                {/* Winner Avatar Circle */}
+                <div className="relative inline-block mt-4 mb-3">
+                  <div className="absolute inset-0 bg-amber-500/25 rounded-full blur-lg animate-pulse" />
+                  <div className="relative w-20 h-20 bg-slate-950 border-2 border-amber-400/80 rounded-full flex items-center justify-center text-4xl shadow-2xl">
+                    {winnerPlayer?.avatar || '👑'}
+                    {/* Tiny pawn badge at the corner of avatar */}
+                    <span className="absolute -bottom-1 -right-1 bg-gradient-to-r from-amber-400 to-yellow-500 text-[10px] font-black px-1.5 py-0.5 rounded-full border border-slate-900 shadow-md">
+                      🥇
+                    </span>
+                  </div>
+                </div>
+
+                {/* Winner details */}
+                <p className={`font-black text-xl tracking-tight ${winnerColorText}`}>
+                  {activeRoom.winnerName}
+                </p>
+                <p className="text-white/60 text-xs font-bold uppercase tracking-wider mt-1">
+                  Ludo Master Champion
+                </p>
+                <div className="mt-4 px-4 py-2 bg-white/5 border border-white/10 rounded-xl inline-block">
+                  <span className="text-[10px] text-white/40 uppercase font-bold mr-1">Status:</span>
+                  <span className="text-[11px] font-black text-amber-400 uppercase">Unbeaten</span>
+                </div>
+
+                <div className="mt-8">
+                  <button
+                    id="victory-main-menu-btn"
+                    onClick={leaveRoom}
+                    className="w-full py-3.5 px-6 bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-400 hover:to-yellow-500 text-slate-950 font-black text-xs rounded-xl transition-all duration-300 shadow-lg shadow-amber-500/10 hover:shadow-amber-500/30 hover:scale-[1.02] active:scale-[0.98] uppercase tracking-wider border border-amber-400/20"
+                  >
+                    Return to Main Menu
+                  </button>
+                </div>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
+          );
+        })()}
       </AnimatePresence>
 
     </div>
