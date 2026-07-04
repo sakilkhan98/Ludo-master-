@@ -12,10 +12,10 @@ import { Star, Shield, HelpCircle, Trophy, Volume2, VolumeX, PhoneOff, ArrowRigh
 import confetti from 'canvas-confetti';
 
 const DICE_CORNER_CLASSES: Record<PlayerColor, string> = {
-  red: 'top-1 left-1 md:top-2 md:left-2',
-  green: 'top-1 right-1 md:top-2 md:right-2',
-  yellow: 'bottom-1 right-1 md:bottom-2 md:right-2',
-  blue: 'bottom-1 left-1 md:bottom-2 md:left-2'
+  red: 'top-[8%] left-[8%]',
+  green: 'top-[8%] right-[8%]',
+  yellow: 'bottom-[8%] right-[8%]',
+  blue: 'bottom-[8%] left-[8%]'
 };
 
 const DICE_RING_CLASSES: Record<PlayerColor, string> = {
@@ -377,60 +377,23 @@ export default function GameBoard() {
           </div>
         </div>
 
-        {/* Board and Dice Wrapper with custom padding to hold outer dice and chat bubbles */}
+        {/* Board and Dice Wrapper with custom minimal padding to maximize screen usage */}
         <div 
-          className="relative p-10 md:p-12 w-full max-w-[540px] flex items-center justify-center transition-transform duration-1000 ease-out-back"
+          className="relative p-2 w-full max-w-[480px] xs:max-w-[520px] sm:max-w-[560px] md:max-w-[600px] flex items-center justify-center transition-transform duration-1000 ease-out-back"
           style={{ transform: `rotate(${boardRotation}deg)` }}
         >
 
-          {/* Floating Active Corner Dice outside board corners */}
-          {turnPlayer && (
-            <div className={`absolute ${DICE_CORNER_CLASSES[turnPlayer.color]} z-40 pointer-events-auto transition-all duration-500 ease-out`}>
-              <button
-                id={`roll-dice-floating-${turnPlayer.color}`}
-                onClick={() => {
-                  if (isMyTurn && !activeRoom.dice.rolled && !isRolling) {
-                    rollDice();
-                  }
-                }}
-                disabled={!isMyTurn || activeRoom.dice.rolled || isRolling}
-                className={`transition-all duration-300 relative flex flex-col items-center justify-center p-2 rounded-2xl border backdrop-blur-md shadow-2xl ${
-                  isMyTurn && !activeRoom.dice.rolled && !isRolling
-                    ? `scale-110 cursor-pointer hover:scale-115 active:scale-95 ring-4 animate-pulse ${DICE_RING_CLASSES[turnPlayer.color]}`
-                    : `scale-90 opacity-95 ${DICE_RING_CLASSES[turnPlayer.color]}`
-                }`}
-                style={{ transform: `rotate(${-boardRotation}deg)` }}
-              >
-                {/* Visual label above dice */}
-                <span className="px-2 py-0.5 mb-1.5 rounded-full bg-slate-950/80 text-[8px] font-black uppercase tracking-wider text-white">
-                  {turnPlayer.name.split(' ')[0]}
-                </span>
-
-                <div className={`dice-scene glow-${turnPlayer.color}`}>
-                  <div className={`dice-cube ${isRolling ? 'is-rolling' : `show-${activeRoom.dice.value}`}`}>
-                    <div className="dice-face face-1"><div className="dice-dot"></div></div>
-                    <div className="dice-face face-2"><div className="dice-dot"></div><div className="dice-dot"></div></div>
-                    <div className="dice-face face-3"><div className="dice-dot"></div><div className="dice-dot"></div><div className="dice-dot"></div></div>
-                    <div className="dice-face face-4"><div className="dice-dot"></div><div className="dice-dot"></div><div className="dice-dot"></div><div className="dice-dot"></div></div>
-                    <div className="dice-face face-5"><div className="dice-dot"></div><div className="dice-dot"></div><div className="dice-dot"></div><div className="dice-dot"></div><div className="dice-dot"></div></div>
-                    <div className="dice-face face-6"><div className="dice-dot"></div><div className="dice-dot"></div><div className="dice-dot"></div><div className="dice-dot"></div><div className="dice-dot"></div><div className="dice-dot"></div></div>
-                  </div>
-                </div>
-              </button>
-            </div>
-          )}
-
-          {/* Outer square container representing premium wooden frame */}
-          <div className="w-full aspect-square bg-gradient-to-br from-[#df9e62] via-[#ca8545] to-[#aa6622] border-[12px] border-[#925524] rounded-[38px] p-2.5 shadow-[inset_0_4px_12px_rgba(255,255,255,0.45),0_15px_30px_rgba(0,0,0,0.7)] relative overflow-hidden">
+          {/* Outer square container representing high-contrast modern frame */}
+          <div className="w-full aspect-square bg-[#0c082b] border-[10px] border-[#1e1757] rounded-[28px] p-1 shadow-[0_12px_28px_rgba(0,0,0,0.7),inset_0_2px_8px_rgba(255,255,255,0.15)] relative overflow-hidden">
             
-            {/* LUDO BOARD PLAYING FIELD WITH ELEVATED PARCHMENT BACKGROUND */}
-            <div className="w-full h-full relative bg-[#F7F4EB] rounded-[22px] overflow-hidden shadow-[inset_0_2px_8px_rgba(0,0,0,0.3)] border border-[#aa6622]/30">
+            {/* LUDO BOARD PLAYING FIELD WITH PURE WHITE HIGH-CONTRAST BACKGROUND */}
+            <div className="w-full h-full relative bg-white rounded-[16px] overflow-hidden border-2 border-slate-950">
             
             {/* 1. Red Yard (Top Left) */}
-            <div className="absolute top-0 left-0 w-[40%] h-[40%] bg-[#E13A23] p-2 flex items-center justify-center border-r-[3px] border-b-[3px] border-[#8a4a15]/30">
-              <div className="w-[88%] h-[88%] bg-white rounded-2xl border-2 border-black/10 shadow-[inset_0_2px_6px_rgba(0,0,0,0.15)] relative flex items-center justify-center overflow-hidden">
+            <div className="absolute top-0 left-0 w-[40%] h-[40%] bg-[#E13A23] p-2.5 flex items-center justify-center border-r-[2.5px] border-b-[2.5px] border-slate-950">
+              <div className="w-[86%] h-[86%] bg-white rounded-xl border-2 border-slate-950 shadow-inner relative flex items-center justify-center overflow-hidden">
                 {/* 6x6 grid mapping to perfectly match 15x15 layout */}
-                <div className="absolute inset-0 grid grid-cols-6 grid-rows-6 p-1.5 md:p-2.5">
+                <div className="absolute inset-0 grid grid-cols-6 grid-rows-6 p-2">
                   {Array.from({ length: 36 }).map((_, idx) => {
                     const r = Math.floor(idx / 6);
                     const c = idx % 6;
@@ -438,7 +401,7 @@ export default function GameBoard() {
                     if (isSocket) {
                       return (
                         <div key={idx} className="flex items-center justify-center p-0.5">
-                          <div className="w-full h-full rounded-full bg-[#E13A23] border-[1.5px] border-white shadow-[0_2px_4px_rgba(0,0,0,0.15),inset_0_1.5px_3.5px_rgba(0,0,0,0.35)]" />
+                          <div className="w-full h-full rounded-full bg-[#E13A23] border-2 border-slate-950 shadow-sm" />
                         </div>
                       );
                     }
@@ -467,10 +430,10 @@ export default function GameBoard() {
             </div>
 
             {/* 2. Green Yard (Top Right) */}
-            <div className="absolute top-0 right-0 w-[40%] h-[40%] bg-[#0BB24E] p-2 flex items-center justify-center border-l-[3px] border-b-[3px] border-[#8a4a15]/30">
-              <div className="w-[88%] h-[88%] bg-white rounded-2xl border-2 border-black/10 shadow-[inset_0_2px_6px_rgba(0,0,0,0.15)] relative flex items-center justify-center overflow-hidden">
+            <div className="absolute top-0 right-0 w-[40%] h-[40%] bg-[#0BB24E] p-2.5 flex items-center justify-center border-l-[2.5px] border-b-[2.5px] border-slate-950">
+              <div className="w-[86%] h-[86%] bg-white rounded-xl border-2 border-slate-950 shadow-inner relative flex items-center justify-center overflow-hidden">
                 {/* 6x6 grid mapping to perfectly match 15x15 layout */}
-                <div className="absolute inset-0 grid grid-cols-6 grid-rows-6 p-1.5 md:p-2.5">
+                <div className="absolute inset-0 grid grid-cols-6 grid-rows-6 p-2">
                   {Array.from({ length: 36 }).map((_, idx) => {
                     const r = Math.floor(idx / 6);
                     const c = idx % 6;
@@ -478,7 +441,7 @@ export default function GameBoard() {
                     if (isSocket) {
                       return (
                         <div key={idx} className="flex items-center justify-center p-0.5">
-                          <div className="w-full h-full rounded-full bg-[#0BB24E] border-[1.5px] border-white shadow-[0_2px_4px_rgba(0,0,0,0.15),inset_0_1.5px_3.5px_rgba(0,0,0,0.35)]" />
+                          <div className="w-full h-full rounded-full bg-[#0BB24E] border-2 border-slate-950 shadow-sm" />
                         </div>
                       );
                     }
@@ -507,10 +470,10 @@ export default function GameBoard() {
             </div>
 
             {/* 3. Yellow Yard (Bottom Right) */}
-            <div className="absolute bottom-0 right-0 w-[40%] h-[40%] bg-[#F9C013] p-2 flex items-center justify-center border-l-[3px] border-t-[3px] border-[#8a4a15]/30">
-              <div className="w-[88%] h-[88%] bg-white rounded-2xl border-2 border-black/10 shadow-[inset_0_2px_6px_rgba(0,0,0,0.15)] relative flex items-center justify-center overflow-hidden">
+            <div className="absolute bottom-0 right-0 w-[40%] h-[40%] bg-[#F9C013] p-2.5 flex items-center justify-center border-l-[2.5px] border-t-[2.5px] border-slate-950">
+              <div className="w-[86%] h-[86%] bg-white rounded-xl border-2 border-slate-950 shadow-inner relative flex items-center justify-center overflow-hidden">
                 {/* 6x6 grid mapping to perfectly match 15x15 layout */}
-                <div className="absolute inset-0 grid grid-cols-6 grid-rows-6 p-1.5 md:p-2.5">
+                <div className="absolute inset-0 grid grid-cols-6 grid-rows-6 p-2">
                   {Array.from({ length: 36 }).map((_, idx) => {
                     const r = Math.floor(idx / 6);
                     const c = idx % 6;
@@ -518,7 +481,7 @@ export default function GameBoard() {
                     if (isSocket) {
                       return (
                         <div key={idx} className="flex items-center justify-center p-0.5">
-                          <div className="w-full h-full rounded-full bg-[#F9C013] border-[1.5px] border-white shadow-[0_2px_4px_rgba(0,0,0,0.15),inset_0_1.5px_3.5px_rgba(0,0,0,0.35)]" />
+                          <div className="w-full h-full rounded-full bg-[#F9C013] border-2 border-slate-950 shadow-sm" />
                         </div>
                       );
                     }
@@ -547,10 +510,10 @@ export default function GameBoard() {
             </div>
 
             {/* 4. Bottom Left Yard (Blue) */}
-            <div className="absolute bottom-0 left-0 w-[40%] h-[40%] bg-[#028BF8] p-2 flex items-center justify-center border-r-[3px] border-t-[3px] border-[#8a4a15]/30">
-              <div className="w-[88%] h-[88%] bg-white rounded-2xl border-2 border-black/10 shadow-[inset_0_2px_6px_rgba(0,0,0,0.15)] relative flex items-center justify-center overflow-hidden">
+            <div className="absolute bottom-0 left-0 w-[40%] h-[40%] bg-[#028BF8] p-2.5 flex items-center justify-center border-r-[2.5px] border-t-[2.5px] border-slate-950">
+              <div className="w-[86%] h-[86%] bg-white rounded-xl border-2 border-slate-950 shadow-inner relative flex items-center justify-center overflow-hidden">
                 {/* 6x6 grid mapping to perfectly match 15x15 layout */}
-                <div className="absolute inset-0 grid grid-cols-6 grid-rows-6 p-1.5 md:p-2.5">
+                <div className="absolute inset-0 grid grid-cols-6 grid-rows-6 p-2">
                   {Array.from({ length: 36 }).map((_, idx) => {
                     const r = Math.floor(idx / 6);
                     const c = idx % 6;
@@ -558,7 +521,7 @@ export default function GameBoard() {
                     if (isSocket) {
                       return (
                         <div key={idx} className="flex items-center justify-center p-0.5">
-                          <div className="w-full h-full rounded-full bg-[#028BF8] border-[1.5px] border-white shadow-[0_2px_4px_rgba(0,0,0,0.15),inset_0_1.5px_3.5px_rgba(0,0,0,0.35)]" />
+                          <div className="w-full h-full rounded-full bg-[#028BF8] border-2 border-slate-950 shadow-sm" />
                         </div>
                       );
                     }
@@ -587,16 +550,16 @@ export default function GameBoard() {
             </div>
 
             {/* 5. Center Finish Area (Classic Triangles Layout) */}
-            <div className="absolute top-[40%] left-[40%] w-[20%] h-[20%] bg-[#E5A65D] flex items-center justify-center border-[2.5px] border-[#925524] overflow-hidden shadow-[inset_0_2px_5px_rgba(0,0,0,0.4)]">
+            <div className="absolute top-[40%] left-[40%] w-[20%] h-[20%] bg-[#E5A65D] flex items-center justify-center border-[2.5px] border-slate-950 overflow-hidden">
               <div className="w-full h-full relative">
                 {/* Left Triangle (Red) */}
-                <div className="absolute inset-0 bg-[#E13A23]" style={{ clipPath: 'polygon(0% 0%, 50% 50%, 0% 100%)' }} />
+                <div className="absolute inset-0 bg-[#E13A23] border border-slate-950/20" style={{ clipPath: 'polygon(0% 0%, 50% 50%, 0% 100%)' }} />
                 {/* Top Triangle (Green) */}
-                <div className="absolute inset-0 bg-[#0BB24E]" style={{ clipPath: 'polygon(0% 0%, 100% 0%, 50% 50%)' }} />
+                <div className="absolute inset-0 bg-[#0BB24E] border border-slate-950/20" style={{ clipPath: 'polygon(0% 0%, 100% 0%, 50% 50%)' }} />
                 {/* Right Triangle (Yellow) */}
-                <div className="absolute inset-0 bg-[#F9C013]" style={{ clipPath: 'polygon(100% 0%, 100% 100%, 50% 50%)' }} />
+                <div className="absolute inset-0 bg-[#F9C013] border border-slate-950/20" style={{ clipPath: 'polygon(100% 0%, 100% 100%, 50% 50%)' }} />
                 {/* Bottom Triangle (Blue) */}
-                <div className="absolute inset-0 bg-[#028BF8]" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 50% 50%)' }} />
+                <div className="absolute inset-0 bg-[#028BF8] border border-slate-950/20" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 50% 50%)' }} />
               </div>
             </div>
 
@@ -612,36 +575,40 @@ export default function GameBoard() {
 
                 if (isYard || isCenter) return <div key={idx} />;
 
-                // Parchment white is default cell background
-                let cellBg = 'bg-[#FBF8EB] border-[0.5px] border-[#D6CEBC]/80 shadow-[inset_0_1px_1.5px_rgba(255,255,255,0.7)]';
+                // Solid high-contrast white cell background with thick black borders
+                let cellBg = 'bg-[#FFFFFF] border-[1.5px] border-slate-950';
                 let cellContent: React.ReactNode = null;
                 
                 // Color Home Paths
-                if (r === 7 && c >= 1 && c <= 5) cellBg = 'bg-[#E13A23] border-[0.5px] border-[#9E1A0C]/50 shadow-inner';
-                if (c === 7 && r >= 1 && r <= 5) cellBg = 'bg-[#0BB24E] border-[0.5px] border-[#067F37]/50 shadow-inner';
-                if (r === 7 && c >= 9 && c <= 13) cellBg = 'bg-[#F9C013] border-[0.5px] border-[#C99805]/50 shadow-inner';
-                if (c === 7 && r >= 9 && r <= 13) cellBg = 'bg-[#028BF8] border-[0.5px] border-[#0164B5]/50 shadow-inner';
+                if (r === 7 && c >= 1 && c <= 5) cellBg = 'bg-[#E13A23] border-[1.5px] border-slate-950 shadow-inner';
+                if (c === 7 && r >= 1 && r <= 5) cellBg = 'bg-[#0BB24E] border-[1.5px] border-slate-950 shadow-inner';
+                if (r === 7 && c >= 9 && c <= 13) cellBg = 'bg-[#F9C013] border-[1.5px] border-slate-950 shadow-inner';
+                if (c === 7 && r >= 9 && r <= 13) cellBg = 'bg-[#028BF8] border-[1.5px] border-slate-950 shadow-inner';
 
                 // Color Start Cells
                 if (r === 6 && c === 1) {
-                  cellBg = 'bg-[#E13A23] border-[0.5px] border-[#9E1A0C]/40 relative shadow-inner';
+                  cellBg = 'bg-[#E13A23] border-[1.5px] border-slate-950 shadow-inner';
                 }
                 if (r === 1 && c === 8) {
-                  cellBg = 'bg-[#0BB24E] border-[0.5px] border-[#067F37]/40 relative shadow-inner';
+                  cellBg = 'bg-[#0BB24E] border-[1.5px] border-slate-950 shadow-inner';
                 }
                 if (r === 8 && c === 13) {
-                  cellBg = 'bg-[#F9C013] border-[0.5px] border-[#C99805]/40 relative shadow-inner';
+                  cellBg = 'bg-[#F9C013] border-[1.5px] border-slate-950 shadow-inner';
                 }
                 if (r === 13 && c === 6) {
-                  cellBg = 'bg-[#028BF8] border-[0.5px] border-[#0164B5]/40 relative shadow-inner';
+                  cellBg = 'bg-[#028BF8] border-[1.5px] border-slate-950 shadow-inner';
                 }
 
-                // Path Entrance Cells (but without arrows as inside grid should be completely clean)
-
-                // Render Star cells but without any Star icon inside, keeping it clean
+                // Render Star cells with a bold black Star icon
                 const isStar = safeStars.some(s => s.row === r && s.col === c);
                 if (isStar) {
-                  cellBg = 'bg-[#E5F1FF] border-[0.5px] border-[#B8D7FF] shadow-[inset_0_1px_2px_rgba(255,255,255,0.7)]';
+                  cellBg = 'bg-[#FFFFFF] border-[1.5px] border-slate-950 flex items-center justify-center';
+                  cellContent = <Star className="w-3.5 h-3.5 text-slate-950 fill-slate-950" />;
+                }
+
+                // Specific detail (e.g. circles inside home path elements matching standard style)
+                if (r === 2 && c === 7) {
+                  cellContent = <div className="w-3 h-3 rounded-full border-2 border-slate-950/40 bg-transparent" />;
                 }
 
                 return (
@@ -649,7 +616,7 @@ export default function GameBoard() {
                     key={idx} 
                     className={`${cellBg} w-full h-full flex items-center justify-center text-[8px]`}
                   >
-                    {/* Clean and completely empty cell track as requested */}
+                    {cellContent}
                   </div>
                 );
               })}
@@ -735,18 +702,41 @@ export default function GameBoard() {
         <div className="w-full max-w-sm mt-2 grid grid-cols-2 gap-4">
           
           {/* Active Player Card with status */}
-          <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col items-center justify-center relative overflow-hidden shadow-lg text-center">
-            <span className="text-[9px] font-bold uppercase tracking-widest text-white/40 mb-2">Dice Status</span>
+          <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-3 flex flex-col items-center justify-center relative overflow-hidden shadow-lg text-center min-h-[140px]">
+            <span className="text-[9px] font-black uppercase tracking-widest text-white/40 mb-1.5">Dice Status</span>
             
-            <div className={`text-lg font-black tracking-tight ${COLOR_CLASSES[turnPlayer?.color || 'red'].text}`}>
-              {activeRoom.dice.rolled ? `Rolled a ${activeRoom.dice.value}!` : isRolling ? 'Rolling...' : 'Needs to Roll'}
-            </div>
-
-            {isMyTurn && !activeRoom.dice.rolled && !isRolling && (
-              <span className="text-[10px] text-blue-400 font-extrabold mt-1.5 animate-bounce">
-                Tap Corner Dice!
-              </span>
+            {/* Interactive 3D Dice Cube inside the card */}
+            {turnPlayer && (
+              <button
+                id={`roll-dice-console-${turnPlayer.color}`}
+                onClick={() => {
+                  if (isMyTurn && !activeRoom.dice.rolled && !isRolling) {
+                    rollDice();
+                  }
+                }}
+                disabled={!isMyTurn || activeRoom.dice.rolled || isRolling}
+                className={`transition-all duration-300 relative flex items-center justify-center p-2 rounded-xl border ${
+                  isMyTurn && !activeRoom.dice.rolled && !isRolling
+                    ? `scale-105 cursor-pointer hover:scale-110 active:scale-95 ring-2 animate-pulse ${DICE_RING_CLASSES[turnPlayer.color]}`
+                    : `scale-95 opacity-90 ${DICE_RING_CLASSES[turnPlayer.color]}`
+                }`}
+              >
+                <div className={`dice-scene glow-${turnPlayer.color} scale-[0.75] my-0.5`}>
+                  <div className={`dice-cube ${isRolling ? 'is-rolling' : `show-${activeRoom.dice.value}`}`}>
+                    <div className="dice-face face-1"><div className="dice-dot"></div></div>
+                    <div className="dice-face face-2"><div className="dice-dot"></div><div className="dice-dot"></div></div>
+                    <div className="dice-face face-3"><div className="dice-dot"></div><div className="dice-dot"></div><div className="dice-dot"></div></div>
+                    <div className="dice-face face-4"><div className="dice-dot"></div><div className="dice-dot"></div><div className="dice-dot"></div><div className="dice-dot"></div></div>
+                    <div className="dice-face face-5"><div className="dice-dot"></div><div className="dice-dot"></div><div className="dice-dot"></div><div className="dice-dot"></div><div className="dice-dot"></div></div>
+                    <div className="dice-face face-6"><div className="dice-dot"></div><div className="dice-dot"></div><div className="dice-dot"></div><div className="dice-dot"></div><div className="dice-dot"></div><div className="dice-dot"></div></div>
+                  </div>
+                </div>
+              </button>
             )}
+
+            <div className={`text-[11px] font-black tracking-tight mt-2 ${COLOR_CLASSES[turnPlayer?.color || 'red'].text}`}>
+              {activeRoom.dice.rolled ? `Rolled a ${activeRoom.dice.value}!` : isRolling ? 'Rolling...' : isMyTurn ? 'Tap Dice to Roll' : 'Waiting...'}
+            </div>
           </div>
 
           {/* Opponent Info card */}
@@ -782,6 +772,17 @@ export default function GameBoard() {
             <MessageCircle className="w-4 h-4 text-blue-400 animate-pulse" />
             <span>Quick Chat / Reactions</span>
           </button>
+        </div>
+
+        {/* Styled signature at the bottom with a subtle animation */}
+        <div className="mt-6 pb-2 flex justify-center">
+          <motion.div
+            animate={{ opacity: [0.4, 1, 0.4], scale: [0.97, 1, 0.97] }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            className="text-[9px] font-black uppercase tracking-widest text-white/35 font-mono select-none"
+          >
+            Make by the <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-400 via-amber-400 to-indigo-400">Ns team</span>
+          </motion.div>
         </div>
 
         {/* Compact Reactions Selection Grid Overlay */}

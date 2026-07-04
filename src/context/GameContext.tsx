@@ -92,6 +92,11 @@ interface GameContextProps {
   setActiveRoom: (val: RoomState | null | ((prev: RoomState | null) => RoomState | null)) => void;
   setGameMode: (val: 'offline2' | 'offline4' | 'online' | 'practice' | null) => void;
   claimDailyReward: () => Promise<void>;
+  
+  // SakiL Beats Background Music Actions
+  currentSong: { id: string; title: string; artist: string; url: string; playing: boolean } | null;
+  playSong: (song: { id: string; title: string; artist: string; url: string }) => Promise<void>;
+  pauseSong: () => Promise<void>;
 }
 
 const GameContext = createContext<GameContextProps | undefined>(undefined);
@@ -106,7 +111,19 @@ const DEFAULT_SETTINGS: GameSettings = {
 
 const AVATARS = ['👑', '🦊', '🦁', '🐼', '🐨', '🐯', '🦄', '🐉'];
 
+// Global Room Audio Singleton for background song syncing and persistent playback
+const globalRoomAudio = new Audio();
+globalRoomAudio.preload = 'auto';
+globalRoomAudio.loop = true;
+
 export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [currentSong, setCurrentSongState] = useState<{ id: string; title: string; artist: string; url: string; playing: boolean } | null>(null);
+  const currentSongRef = useRef<{ id: string; title: string; artist: string; url: string; playing: boolean } | null>(null);
+  const setCurrentSong = (val: { id: string; title: string; artist: string; url: string; playing: boolean } | null) => {
+    currentSongRef.current = val;
+    setCurrentSongState(val);
+  };
+
   const [currentUser, setCurrentUserState] = useState<FirebaseUser | null>(null);
   const currentUserRef = useRef<FirebaseUser | null>(null);
   const setCurrentUser = (val: FirebaseUser | null) => {
@@ -801,6 +818,31 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const room = docSnap.data() as RoomState;
       const profile = getActiveProfile();
+
+      // Live background song sync across the online room
+      if (room.activeSong) {
+        const rSong = room.activeSong;
+        const currentLocal = currentSongRef.current;
+        
+        // Sync if local song doesn't exist, has different id, or has different play/pause state
+        if (!currentLocal || currentLocal.id !== rSong.id || currentLocal.playing !== rSong.playing) {
+          if (globalRoomAudio.src !== rSong.url) {
+            globalRoomAudio.src = rSong.url;
+          }
+          
+          if (rSong.playing) {
+            // Seek to match active playtime (approximate with latency)
+            const latency = (Date.now() - rSong.timestamp) / 1000;
+            const targetTime = rSong.progress + (latency > 0 && latency < 15 ? latency : 0);
+            globalRoomAudio.currentTime = targetTime;
+            globalRoomAudio.play().catch(e => console.warn("Background audio sync failed:", e));
+            setCurrentSong({ id: rSong.id, title: rSong.title, artist: rSong.artist, url: rSong.url, playing: true });
+          } else {
+            globalRoomAudio.pause();
+            setCurrentSong({ id: rSong.id, title: rSong.title, artist: rSong.artist, url: rSong.url, playing: false });
+          }
+        }
+      }
 
       // If we are currently moving a token, preserve our local animated boardState 
       // so the sequential transition does not jump or flicker.
@@ -1653,6 +1695,79 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [activeMode, currentUser, guestUser]);
 
+  // ----------------- BACKGROUND MUSIC PLAYER ACTIONS -----------------
+  const playSong = async (song: { id: string; title: string; artist: string; url: string }) => {
+    const activeUid = currentUserRef.current?.uid || guestUserRef.current?.uid || 'guest';
+    const newSongState = { ...song, playing: true };
+    setCurrentSong(newSongState);
+
+    try {
+      if (globalRoomAudio.src !== song.url) {
+        globalRoomAudio.src = song.url;
+      }
+      // If we are syncing or playing, ensure audio triggers
+      await globalRoomAudio.play();
+    } catch (e) {
+      console.warn("Local play failed, browser might require user interaction first:", e);
+    }
+
+    // Sync to Firestore if in an online room
+    const currentRoom = activeRoomRef.current;
+    if (currentRoom && gameMode === 'online') {
+      const roomRef = doc(db, 'rooms', currentRoom.roomId);
+      try {
+        await updateDoc(roomRef, {
+          activeSong: {
+            id: song.id,
+            title: song.title,
+            artist: song.artist,
+            url: song.url,
+            playing: true,
+            timestamp: Date.now(),
+            progress: globalRoomAudio.currentTime || 0,
+            senderId: activeUid
+          },
+          lastActivity: Date.now()
+        });
+      } catch (err) {
+        console.error("Failed to sync playSong state to Firestore:", err);
+      }
+    }
+  };
+
+  const pauseSong = async () => {
+    const activeUid = currentUserRef.current?.uid || guestUserRef.current?.uid || 'guest';
+    const current = currentSongRef.current;
+    if (current) {
+      setCurrentSong({ ...current, playing: false });
+    }
+    
+    globalRoomAudio.pause();
+
+    // Sync to Firestore if in an online room
+    const currentRoom = activeRoomRef.current;
+    if (currentRoom && gameMode === 'online') {
+      const roomRef = doc(db, 'rooms', currentRoom.roomId);
+      try {
+        await updateDoc(roomRef, {
+          activeSong: current ? {
+            id: current.id,
+            title: current.title,
+            artist: current.artist,
+            url: current.url,
+            playing: false,
+            timestamp: Date.now(),
+            progress: globalRoomAudio.currentTime || 0,
+            senderId: activeUid
+          } : null,
+          lastActivity: Date.now()
+        });
+      } catch (err) {
+        console.error("Failed to sync pauseSong state to Firestore:", err);
+      }
+    }
+  };
+
   // Daily Reward claimer
   const claimDailyReward = async () => {
     const activeUid = currentUser?.uid || guestUser?.uid;
@@ -1704,7 +1819,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setActiveMode,
         setActiveRoom,
         setGameMode,
-        claimDailyReward
+        claimDailyReward,
+        currentSong,
+        playSong,
+        pauseSong
       }}
     >
       {children}

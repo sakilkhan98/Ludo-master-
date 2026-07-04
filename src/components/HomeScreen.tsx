@@ -13,10 +13,9 @@ import {
   ChevronRight, 
   Sparkles, 
   Send,
-  Gift
+  Music
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import LuckyChestPopup from './LuckyChestPopup';
 import { useEffect } from 'react';
 
 const AVATARS = ['👑', '🦊', '🦁', '🐼', '🐨', '🐯', '🦄', '🐉'];
@@ -219,8 +218,8 @@ export default function HomeScreen() {
           </span>
           <div>
             <p className="font-extrabold text-sm tracking-tight text-white">{userDisplayName}</p>
-            <p className="text-yellow-400 text-[10px] font-bold mt-0.5 font-mono flex items-center gap-1">
-              🪙 {currentUser ? (userStats?.ranking || 1000) : guestCoins} Gold
+            <p className="text-amber-400 text-[10px] font-bold mt-0.5 font-mono flex items-center gap-1">
+              🔥 {currentUser ? (userStats?.ranking || 1000) : guestCoins} XP
             </p>
           </div>
         </div>
@@ -242,18 +241,8 @@ export default function HomeScreen() {
         <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mt-1.5">Online Arena</p>
       </div>
 
-      {/* Lucky Daily Chest Portal */}
-      <div className="flex justify-center mb-6">
-        <button
-          id="trigger-lucky-chest-btn"
-          onClick={() => setShowLuckyChest(true)}
-          className="relative inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-[#501311] via-[#100e2e] to-[#090724] border border-amber-400/60 hover:border-amber-400 text-amber-300 font-extrabold text-[11px] uppercase tracking-wider shadow-lg shadow-black/50 hover:scale-105 active:scale-95 transition-all animate-pulse"
-        >
-          <span className="text-base">🎁</span>
-          <span>Lucky Daily Chest</span>
-          <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-ping shrink-0" />
-        </button>
-      </div>
+      {/* Spacer to keep beautiful layout spacing */}
+      <div className="h-4" />
 
       {/* Main Mode Options */}
       <div className="space-y-4 flex-1">
@@ -336,10 +325,10 @@ export default function HomeScreen() {
         <button
           id="leaderboard-nav-btn"
           onClick={() => setActiveMode('leaderboard')}
-          className="flex flex-col items-center gap-1 p-2 rounded-2xl hover:bg-white/5 transition text-white/60 hover:text-amber-400"
+          className="flex flex-col items-center gap-1 p-2 rounded-2xl hover:bg-white/5 transition text-white/60 hover:text-amber-400 animate-pulse"
         >
-          <Gift className="w-5 h-5" />
-          <span className="text-[9px] font-bold tracking-wider uppercase font-sans">Lucky Spin</span>
+          <Music className="w-5 h-5 text-indigo-400" />
+          <span className="text-[9px] font-bold tracking-wider uppercase font-sans text-indigo-200">SakiL Beats</span>
         </button>
 
         <button
@@ -537,9 +526,6 @@ export default function HomeScreen() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Exquisite 3D Lucky Daily Chest pop-up page */}
-      <LuckyChestPopup isOpen={showLuckyChest} onClose={() => setShowLuckyChest(false)} />
 
     </div>
   );

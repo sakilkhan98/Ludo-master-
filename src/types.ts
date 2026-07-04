@@ -58,6 +58,16 @@ export interface RoomState {
   createdAt: number;
   lastActivity: number;
   hasRollExtraTurn: boolean; // flag if current player got extra turn from rolling 6 or cutting
+  activeSong?: {
+    id: string;
+    title: string;
+    artist: string;
+    url: string;
+    playing: boolean;
+    timestamp: number;
+    progress: number;
+    senderId: string;
+  } | null;
 }
 
 export interface UserStats {

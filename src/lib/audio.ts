@@ -492,3 +492,189 @@ export function triggerVibration(pattern: number | number[]) {
     }
   }
 }
+
+// ----------------- PREMIUM DJ CONSOLE SYNTH SOUNDS -----------------
+
+export function playDJKick() {
+  if (!currentSettings.soundEnabled) return;
+  try {
+    const ctx = getAudioContext();
+    const now = ctx.currentTime;
+    
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(150, now);
+    osc.frequency.exponentialRampToValueAtTime(45, now + 0.15);
+    
+    gain.gain.setValueAtTime(0.5, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+    
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    
+    osc.start(now);
+    osc.stop(now + 0.25);
+    triggerVibration(40);
+  } catch (e) {
+    console.warn(e);
+  }
+}
+
+export function playDJSweep() {
+  if (!currentSettings.soundEnabled) return;
+  try {
+    const ctx = getAudioContext();
+    const now = ctx.currentTime;
+    
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(200, now);
+    osc.frequency.exponentialRampToValueAtTime(1500, now + 0.8);
+    
+    gain.gain.setValueAtTime(0.12, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+    
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    
+    osc.start(now);
+    osc.stop(now + 0.85);
+    triggerVibration([50, 50, 50]);
+  } catch (e) {
+    console.warn(e);
+  }
+}
+
+export function playDJLaser() {
+  if (!currentSettings.soundEnabled) return;
+  try {
+    const ctx = getAudioContext();
+    const now = ctx.currentTime;
+    
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(1800, now);
+    osc.frequency.exponentialRampToValueAtTime(120, now + 0.25);
+    
+    gain.gain.setValueAtTime(0.18, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+    
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    
+    osc.start(now);
+    osc.stop(now + 0.28);
+    triggerVibration(30);
+  } catch (e) {
+    console.warn(e);
+  }
+}
+
+export function playDJBassDrop() {
+  if (!currentSettings.soundEnabled) return;
+  try {
+    const ctx = getAudioContext();
+    const now = ctx.currentTime;
+    
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(80, now);
+    osc.frequency.linearRampToValueAtTime(32, now + 1.2);
+    
+    gain.gain.setValueAtTime(0.6, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 1.4);
+    
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    
+    osc.start(now);
+    osc.stop(now + 1.5);
+    triggerVibration([150, 100, 200]);
+  } catch (e) {
+    console.warn(e);
+  }
+}
+
+export function playDJSynthArp() {
+  if (!currentSettings.soundEnabled) return;
+  try {
+    const ctx = getAudioContext();
+    const now = ctx.currentTime;
+    
+    const notes = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25]; // C major scale
+    const step = 0.08;
+    
+    notes.forEach((freq, idx) => {
+      const startTime = now + (idx * step);
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, startTime);
+      
+      gain.gain.setValueAtTime(0.1, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.15);
+      
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      
+      osc.start(startTime);
+      osc.stop(startTime + 0.18);
+    });
+    
+    triggerVibration(100);
+  } catch (e) {
+    console.warn(e);
+  }
+}
+
+export function playDJSnareClap() {
+  if (!currentSettings.soundEnabled) return;
+  try {
+    const ctx = getAudioContext();
+    const now = ctx.currentTime;
+    
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(250, now);
+    osc.frequency.exponentialRampToValueAtTime(80, now + 0.15);
+    
+    gain.gain.setValueAtTime(0.3, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+    
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    
+    osc.start(now);
+    osc.stop(now + 0.18);
+    
+    // Noise snap element
+    const noise = ctx.createOscillator();
+    const noiseGain = ctx.createGain();
+    noise.type = 'sawtooth';
+    noise.frequency.setValueAtTime(800 + Math.random() * 400, now);
+    noiseGain.gain.setValueAtTime(0.12, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+    
+    noise.connect(noiseGain);
+    noiseGain.connect(ctx.destination);
+    
+    noise.start(now);
+    noise.stop(now + 0.1);
+    
+    triggerVibration(45);
+  } catch (e) {
+    console.warn(e);
+  }
+}
+
