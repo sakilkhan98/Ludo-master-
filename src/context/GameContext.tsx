@@ -97,6 +97,8 @@ interface GameContextProps {
   currentSong: { id: string; title: string; artist: string; url: string; playing: boolean } | null;
   playSong: (song: { id: string; title: string; artist: string; url: string }) => Promise<void>;
   pauseSong: () => Promise<void>;
+  songsPlaylist: { id: string; title: string; artist: string; url: string; image?: string; duration?: string; category?: string }[];
+  setSongsPlaylist: (songs: { id: string; title: string; artist: string; url: string; image?: string; duration?: string; category?: string }[]) => void;
 }
 
 const GameContext = createContext<GameContextProps | undefined>(undefined);
@@ -114,9 +116,16 @@ const AVATARS = ['👑', '🦊', '🦁', '🐼', '🐨', '🐯', '🦄', '🐉']
 // Global Room Audio Singleton for background song syncing and persistent playback
 const globalRoomAudio = new Audio();
 globalRoomAudio.preload = 'auto';
-globalRoomAudio.loop = true;
+globalRoomAudio.loop = false;
 
 export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [songsPlaylist, setSongsPlaylistState] = useState<{ id: string; title: string; artist: string; url: string; image?: string; duration?: string; category?: string }[]>([]);
+  const songsPlaylistRef = useRef<{ id: string; title: string; artist: string; url: string; image?: string; duration?: string; category?: string }[]>([]);
+  const setSongsPlaylist = (songs: { id: string; title: string; artist: string; url: string; image?: string; duration?: string; category?: string }[]) => {
+    songsPlaylistRef.current = songs;
+    setSongsPlaylistState(songs);
+  };
+
   const [currentSong, setCurrentSongState] = useState<{ id: string; title: string; artist: string; url: string; playing: boolean } | null>(null);
   const currentSongRef = useRef<{ id: string; title: string; artist: string; url: string; playing: boolean } | null>(null);
   const setCurrentSong = (val: { id: string; title: string; artist: string; url: string; playing: boolean } | null) => {
@@ -1768,6 +1777,35 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const playSongRef = useRef(playSong);
+  useEffect(() => {
+    playSongRef.current = playSong;
+  }, [playSong]);
+
+  // Handle automatic track advancement when current song ends
+  useEffect(() => {
+    const handleSongEnded = () => {
+      const playlist = songsPlaylistRef.current;
+      const current = currentSongRef.current;
+      if (!current || playlist.length === 0) return;
+
+      const currentIndex = playlist.findIndex(s => s.url === current.url);
+      if (currentIndex !== -1) {
+        const nextIndex = (currentIndex + 1) % playlist.length;
+        const nextSong = playlist[nextIndex];
+        playSongRef.current(nextSong);
+      } else {
+        // Fallback to the first song in playlist
+        playSongRef.current(playlist[0]);
+      }
+    };
+
+    globalRoomAudio.addEventListener('ended', handleSongEnded);
+    return () => {
+      globalRoomAudio.removeEventListener('ended', handleSongEnded);
+    };
+  }, []);
+
   // Daily Reward claimer
   const claimDailyReward = async () => {
     const activeUid = currentUser?.uid || guestUser?.uid;
@@ -1822,7 +1860,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         claimDailyReward,
         currentSong,
         playSong,
-        pauseSong
+        pauseSong,
+        songsPlaylist,
+        setSongsPlaylist
       }}
     >
       {children}

@@ -322,7 +322,7 @@ export default function GameBoard() {
     <div id="game-board-container" className="flex flex-col h-full bg-transparent text-white select-none relative overflow-y-auto z-10">
       
       {/* Header Overlay */}
-      <div className="flex items-center justify-between p-4 border-b border-white/10 bg-black/10 sticky top-0 z-40 backdrop-blur-md">
+      <div className="flex items-center justify-between p-3 border-b border-white/10 bg-black/10 sticky top-0 z-40 backdrop-blur-md">
         <div className="flex items-center gap-2">
           <button 
             id="leave-game-btn"
@@ -334,14 +334,24 @@ export default function GameBoard() {
           <span className="text-xs text-white/40 font-mono">Room: {activeRoom.roomId}</span>
         </div>
 
-        {/* Turn Timer visual progress and Sound Toggle */}
+        {/* Turn Timer visual progress, Chat, and Sound Toggle */}
         <div className="flex items-center gap-2">
           {activeRoom.status === 'playing' && (
-            <div className="flex items-center gap-2.5 bg-white/5 border border-white/10 rounded-full py-1 px-2.5 shadow-lg">
+            <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-full py-1 px-2 shadow-lg">
               <span className={`w-2 h-2 rounded-full ${timeLeft <= 7 ? 'bg-red-500 animate-ping' : 'bg-green-500'}`} />
-              <span className="text-[11px] font-bold font-mono text-white/70">{timeLeft}s</span>
+              <span className="text-[10px] font-bold font-mono text-white/70">{timeLeft}s</span>
             </div>
           )}
+
+          {/* Integrated Chat Button */}
+          <button
+            id="header-chat-btn"
+            onClick={() => setShowQuickChat(!showQuickChat)}
+            className="p-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-white/75 transition"
+            title="Chat Reactions"
+          >
+            <MessageCircle className="w-4 h-4 text-blue-400" />
+          </button>
 
           <button
             id="board-sound-toggle-btn"
@@ -361,22 +371,6 @@ export default function GameBoard() {
       {/* Main Game Screen Board Area */}
       <div className="flex-1 flex flex-col items-center justify-center p-3 relative">
         
-        {/* Dynamic status banner */}
-        <div className="w-full max-w-md text-center py-2 px-4 mb-4 backdrop-blur-md bg-white/5 border border-white/10 rounded-2xl shadow-lg shadow-black/10 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-left">
-            <div className={`w-3.5 h-3.5 rounded-full ${COLOR_CLASSES[turnPlayer?.color || 'red'].bg} animate-pulse`} />
-            <div>
-              <p className="text-xs font-bold text-white/90">{turnPlayer?.name || 'Player'}'s Turn</p>
-              <p className="text-[10px] text-white/40 font-medium">Color: {COLOR_NAMES[turnPlayer?.color || 'red']}</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] uppercase font-bold text-white/40 tracking-wide">Status:</span>
-            <span className="text-xs font-extrabold text-blue-400 capitalize">{activeRoom.status}</span>
-          </div>
-        </div>
-
         {/* Board and Dice Wrapper with custom minimal padding to maximize screen usage */}
         <div 
           className="relative p-2 w-full max-w-[480px] xs:max-w-[520px] sm:max-w-[560px] md:max-w-[600px] flex items-center justify-center transition-transform duration-1000 ease-out-back"
@@ -699,7 +693,7 @@ export default function GameBoard() {
         </div>
 
         {/* Active Roll Panel / User Profile Controls */}
-        <div className="w-full max-w-sm mt-2 grid grid-cols-2 gap-4">
+        <div className="w-full max-w-sm mt-2 hidden grid-cols-2 gap-4">
           
           {/* Active Player Card with status */}
           <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-3 flex flex-col items-center justify-center relative overflow-hidden shadow-lg text-center min-h-[140px]">
@@ -762,17 +756,65 @@ export default function GameBoard() {
 
         </div>
 
-        {/* Quick Chat FAB and Popover Selector */}
-        <div className="mt-4 flex flex-col items-center justify-center">
-          <button
-            id="quick-chat-toggle-btn"
-            onClick={() => setShowQuickChat(!showQuickChat)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-slate-900 border border-slate-700/60 text-slate-200 font-bold text-xs shadow-xl hover:bg-slate-850 hover:border-slate-600 hover:scale-105 active:scale-95 transition-all"
-          >
-            <MessageCircle className="w-4 h-4 text-blue-400 animate-pulse" />
-            <span>Quick Chat / Reactions</span>
-          </button>
+        {/* Ultra-sleek, Compact Action & Dice Bar */}
+        <div className="w-full max-w-[440px] xs:max-w-[480px] mt-1 backdrop-blur-xl bg-black/45 border border-white/10 rounded-2xl p-2.5 flex items-center justify-between shadow-xl">
+          {/* Turn Indicator */}
+          <div className="flex items-center gap-2 max-w-[45%]">
+            <span className="text-lg bg-white/5 p-1 rounded-xl">{turnPlayer?.avatar || '🦁'}</span>
+            <div className="text-left min-w-0">
+              <p className="text-[11px] font-black text-white/95 leading-none truncate">{turnPlayer?.name || 'Player'}</p>
+              <p className={`text-[9px] font-bold uppercase tracking-wider mt-0.5 leading-none ${COLOR_CLASSES[turnPlayer?.color || 'red'].text}`}>
+                {COLOR_NAMES[turnPlayer?.color || 'red']}
+              </p>
+            </div>
+          </div>
+
+          {/* Centered state instruction */}
+          <div className="text-center px-2 flex-1 min-w-0">
+            <p className="text-[9px] font-black uppercase tracking-wider text-white/40 leading-none">Status</p>
+            <p className={`text-[11px] font-black uppercase tracking-tight truncate mt-1 ${COLOR_CLASSES[turnPlayer?.color || 'red'].text}`}>
+              {activeRoom.dice.rolled ? `Rolled a ${activeRoom.dice.value}!` : isRolling ? 'Rolling...' : isMyTurn ? 'Tap to Roll' : 'Waiting...'}
+            </p>
+          </div>
+
+          {/* Dice Button */}
+          <div className="relative shrink-0 flex items-center justify-center">
+            {turnPlayer && (
+              <button
+                id={`roll-dice-console-${turnPlayer.color}`}
+                onClick={() => {
+                  if (isMyTurn && !activeRoom.dice.rolled && !isRolling) {
+                    rollDice();
+                  }
+                }}
+                disabled={!isMyTurn || activeRoom.dice.rolled || isRolling}
+                className={`transition-all duration-300 relative flex items-center justify-center p-1 rounded-xl border ${
+                  isMyTurn && !activeRoom.dice.rolled && !isRolling
+                    ? `scale-105 cursor-pointer hover:scale-110 active:scale-95 ring-2 animate-pulse ${DICE_RING_CLASSES[turnPlayer.color]}`
+                    : `scale-95 opacity-90 ${DICE_RING_CLASSES[turnPlayer.color]}`
+                }`}
+              >
+                <div className={`dice-scene glow-${turnPlayer.color} scale-[0.55] my-0.5`}>
+                  <div className={`dice-cube ${isRolling ? 'is-rolling' : `show-${activeRoom.dice.value}`}`}>
+                    <div className="dice-face face-1"><div className="dice-dot"></div></div>
+                    <div className="dice-face face-2"><div className="dice-dot"></div><div className="dice-dot"></div></div>
+                    <div className="dice-face face-3"><div className="dice-dot"></div><div className="dice-dot"></div><div className="dice-dot"></div></div>
+                    <div className="dice-face face-4"><div className="dice-dot"></div><div className="dice-dot"></div><div className="dice-dot"></div><div className="dice-dot"></div></div>
+                    <div className="dice-face face-5"><div className="dice-dot"></div><div className="dice-dot"></div><div className="dice-dot"></div><div className="dice-dot"></div><div className="dice-dot"></div></div>
+                    <div className="dice-face face-6"><div className="dice-dot"></div><div className="dice-dot"></div><div className="dice-dot"></div><div className="dice-dot"></div><div className="dice-dot"></div><div className="dice-dot"></div></div>
+                  </div>
+                </div>
+              </button>
+            )}
+          </div>
         </div>
+
+        {/* Floating Indicator of highlights */}
+        {isMyTurn && activeRoom.dice.rolled && validMoves.length > 0 && (
+          <div className="mt-2 bg-blue-400/20 text-blue-300 text-[10px] border border-blue-400/30 py-1.5 px-3 rounded-xl text-center font-bold animate-pulse">
+            👉 Tap glowing token to move!
+          </div>
+        )}
 
         {/* Styled signature at the bottom with a subtle animation */}
         <div className="mt-6 pb-2 flex justify-center">
